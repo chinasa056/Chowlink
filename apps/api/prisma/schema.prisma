@@ -1,0 +1,294 @@
+generator client {
+provider = "prisma-client-js"
+}
+
+datasource db {
+provider = "mysql"
+url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+SUPER_ADMIN
+COMPANY_ADMIN
+EMPLOYEE
+}
+
+enum OrderStatus {
+PENDING
+AGGREGATED
+DISPATCHED
+IN_TRANSIT
+DELIVERED
+FAILED
+EXPIRED
+CANCELLED
+}
+
+enum DeliveryStatus {
+PENDING
+DISPATCHED
+IN_TRANSIT
+DELIVERED
+FAILED
+}
+
+enum WalletTransactionType {
+CREDIT
+DEBIT
+REFUND
+}
+
+enum OutboxStatus {
+PENDING
+PROCESSING
+SENT
+FAILED
+}
+
+model Organization {
+id                 String       @id @default(uuid())
+name               String
+industry           String?
+orderingCutoffTime String
+isActive           Boolean      @default(true)
+
+users              User[]
+departments        Department[]
+orders             Order[]
+
+wallet             Wallet?
+
+createdAt          DateTime     @default(now())
+updatedAt          DateTime     @updatedAt
+
+@@index([name])
+}
+
+model Department {
+id              String        @id @default(uuid())
+name            String
+
+organizationId  String
+organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+users           User[]
+
+createdAt       DateTime      @default(now())
+updatedAt       DateTime      @updatedAt
+
+@@unique([organizationId, name])
+}
+
+model User {
+id              String       @id @default(uuid())
+
+firstName       String
+lastName        String
+
+email           String       @unique
+password        String
+
+role            UserRole
+
+organizationId  String
+organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+departmentId    String?
+department      Department?  @relation(fields: [departmentId], references: [id])
+
+orders          Order[]
+
+notifications   Notification[]
+
+createdAt       DateTime     @default(now())
+updatedAt       DateTime     @updatedAt
+
+@@index([email])
+}
+
+model Wallet {
+id               String      @id @default(uuid())
+
+organizationId   String      @unique
+organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+balance          Decimal      @db.Decimal(12,2)
+currency         String       @default("NGN")
+
+transactions     WalletTransaction[]
+
+createdAt        DateTime     @default(now())
+updatedAt        DateTime     @updatedAt
+}
+
+model WalletTransaction {
+id            String                 @id @default(uuid())
+
+walletId      String
+wallet        Wallet                 @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+amount        Decimal                @db.Decimal(12,2)
+
+type          WalletTransactionType
+
+description   String?
+
+createdAt     DateTime               @default(now())
+
+@@index([walletId])
+}
+
+model Restaurant {
+id            String       @id @default(uuid())
+
+name          String
+description   String?
+
+isActive      Boolean      @default(true)
+
+menuItems     MenuItem[]
+
+createdAt     DateTime     @default(now())
+updatedAt     DateTime     @updatedAt
+
+@@index([name])
+}
+
+model MenuItem {
+id              String       @id @default(uuid())
+
+restaurantId    String
+restaurant      Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+name            String
+description     String?
+
+price           Decimal      @db.Decimal(12,2)
+
+isAvailable     Boolean      @default(true)
+
+orderItems      OrderItem[]
+
+createdAt       DateTime     @default(now())
+updatedAt       DateTime     @updatedAt
+
+@@index([restaurantId])
+}
+
+model Order {
+id               String        @id @default(uuid())
+
+userId           String
+user             User          @relation(fields: [userId], references: [id])
+
+organizationId   String
+organization     Organization  @relation(fields: [organizationId], references: [id])
+
+status           OrderStatus   @default(PENDING)
+
+totalAmount      Decimal       @db.Decimal(12,2)
+
+notes            String?
+
+orderItems       OrderItem[]
+
+delivery         Delivery?
+
+createdAt        DateTime      @default(now())
+updatedAt        DateTime      @updatedAt
+
+@@index([status])
+@@index([userId])
+@@index([organizationId])
+}
+
+model OrderItem {
+id            String      @id @default(uuid())
+
+orderId       String
+order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+menuItemId    String
+menuItem      MenuItem    @relation(fields: [menuItemId], references: [id])
+
+quantity      Int
+
+price         Decimal     @db.Decimal(12,2)
+
+createdAt     DateTime    @default(now())
+
+@@index([orderId])
+}
+
+model Delivery {
+id                  String           @id @default(uuid())
+
+orderId             String           @unique
+order               Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+chowdeckDeliveryId  String?          @unique
+
+status              DeliveryStatus   @default(PENDING)
+
+estimatedArrival    DateTime?
+deliveredAt         DateTime?
+
+createdAt           DateTime         @default(now())
+updatedAt           DateTime         @updatedAt
+
+@@index([status])
+}
+
+model Notification {
+id             String      @id @default(uuid())
+
+userId         String
+user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+title          String
+message        String
+
+isRead         Boolean     @default(false)
+
+createdAt      DateTime    @default(now())
+
+@@index([userId])
+}
+
+model OutboxEvent {
+id              String        @id @default(uuid())
+
+aggregateId     String
+aggregateType   String
+
+eventType       String
+
+payload         Json
+
+status          OutboxStatus  @default(PENDING)
+
+retryCount      Int           @default(0)
+
+createdAt       DateTime      @default(now())
+updatedAt       DateTime      @updatedAt
+
+@@index([status])
+}
+
+model AuditLog {
+id            String      @id @default(uuid())
+
+actorId       String?
+
+action        String
+
+entityType    String
+entityId      String
+
+metadata      Json?
+
+createdAt     DateTime    @default(now())
+
+@@index([entityType])
+@@index([entityId])
+}
