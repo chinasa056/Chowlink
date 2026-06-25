@@ -880,3 +880,31 @@ Before writing code, create:
 8. **Prisma Schema Design**
 
 Once those are finalized, implementation becomes much faster because every decision has already been made.
+
+
+
+Architecture mistake (overengineering)
+
+Tuesday
+
+How I designed the database schema
+
+Wednesday
+
+Why I chose Outbox Pattern
+
+Thursday
+
+Building a custom SDK instead of scattering Axios calls
+
+Friday
+
+How webhooks and idempotency actually work
+
+Saturday
+
+Project showcase
+
+Sunday
+
+Lessons learned building it

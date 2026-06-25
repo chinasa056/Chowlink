@@ -79,3 +79,77 @@ Response:
   "email": "...",
   "role": "EMPLOYEE"
 }
+
+# ORGANIZATIONS
+
+---
+
+## Create Organization
+
+POST /organizations
+
+Request
+
+{
+  "name": "Flutterwave",
+  "industry": "Fintech",
+  "orderingCutoffTime": "11:30"
+}
+
+---
+
+## Create Department
+
+POST /organizations/:id/departments
+
+Request
+
+{
+  "name": "Engineering"
+}
+
+---
+
+## Get Organizations
+
+GET /organizations
+
+---
+
+## Get Organization
+
+GET /organizations/:id
+
+# CATALOGUE
+
+---
+
+POST /catalogue/restaurants
+
+{
+  "name": "Chicken Republic",
+  "address": "Victoria Island",
+  "cuisineType": "Fast Food"
+}
+
+---
+
+POST /catalogue/restaurants/:restaurantId/menu-items
+
+{
+  "name": "Chicken & Chips",
+  "price": 4500,
+  "description": "Quarter chicken with chips"
+}
+
+---
+
+GET /catalogue/restaurants
+
+---
+
+GET /catalogue/restaurants/:id
+
+---
+
+GET /catalogue/restaurants/:id/menu-items

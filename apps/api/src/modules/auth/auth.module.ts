@@ -13,6 +13,7 @@ import { JwtTokenService } from './infrastructure/services/jwt.service';
 import { UserRepository } from './domain/interfaces/user.repository';
 import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
+import { RefreshUseCase } from './application/use-cases/refresh.use-case';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { JwtStrategy } from '../../common/strategies/jwt.strategy';
 
     PasswordService,
     JwtTokenService,
+    RefreshUseCase,
 
     {
       provide: UserRepository,

@@ -132,6 +132,8 @@ amount        Decimal                @db.Decimal(12,2)
 
 type          WalletTransactionType
 
+reference      String           @unique
+
 description   String?
 
 createdAt     DateTime               @default(now())
