@@ -153,3 +153,43 @@ GET /catalogue/restaurants/:id
 ---
 
 GET /catalogue/restaurants/:id/menu-items
+
+
+# WALLETS
+
+---
+
+GET /wallets/:organizationId
+
+---
+
+POST /wallets/:organizationId/fund
+
+{
+  "amount": 50000,
+  "reference": "FUND-001"
+}
+
+---
+
+POST /wallets/:organizationId/debit
+
+{
+  "amount": 3000,
+  "reference": "ORDER-001",
+  "description": "Order dispatch"
+}
+
+---
+
+POST /wallets/:organizationId/refund
+
+{
+  "amount": 3000,
+  "reference": "REFUND-001",
+  "description": "Delivery failed"
+}
+
+---
+
+GET /wallets/:organizationId/transactions

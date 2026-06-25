@@ -6,6 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { OrganizationsModule } from './modules/organization/organizations.module';
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { RedisModule } from './common/cache/redis.module';
+import { WalletModule } from './modules/wallets/wallet.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { RedisModule } from './common/cache/redis.module';
     AuthModule,
     OrganizationsModule,
     CatalogueModule,
-    RedisModule
+    RedisModule,
+    WalletModule
   ],
 })
 export class AppModule {}
