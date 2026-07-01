@@ -1,6 +1,7 @@
 import {
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 
 import Redis from 'ioredis';
@@ -106,5 +107,29 @@ export class CatalogueService {
     return this.repository.getRestaurantMenuItems(
       restaurantId,
     );
+  }
+
+  async findMenuItemById(menuItemId: string) {
+    return this.repository.findMenuItemById(menuItemId);
+  }
+
+  async findRestaurantById(restaurantId: string) {
+    return this.repository.findRestaurantById(restaurantId);
+  }
+
+  async findMenuItemsById(
+    ids: string[],
+  ) {
+    const menuItems = await this.repository.findMenuItemsById(
+      ids,
+    );
+
+    if (menuItems.length !== ids.length) {
+      throw new NotFoundException(
+        'Some menu items were not found',
+      );
+    }
+
+    return menuItems;
   }
 }

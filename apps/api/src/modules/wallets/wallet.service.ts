@@ -198,4 +198,46 @@ export class WalletService {
       wallet.id,
     );
   }
+
+  async ensureWalletExists(organizationId: string) {
+    const wallet =
+      await this.walletRepository.findByOrganizationId(
+        organizationId,
+      );
+
+    if (!wallet) {
+      throw new BadRequestException(
+        'Wallet not found',
+      );
+    }
+
+    return wallet;
+  } 
+
+  async ensureSufficientBalance(
+    organizationId: string,
+    amount: number,
+  ) {
+    const wallet =
+      await this.walletRepository.findByOrganizationId(
+        organizationId,
+      );
+
+    if (!wallet) {
+      throw new BadRequestException(
+        'Wallet not found',
+      );
+    }
+
+    if (
+      Number(wallet.balance) <
+      amount
+    ) {
+      throw new BadRequestException(
+        'Insufficient balance',
+      );
+    }
+
+    return wallet;
+  } 
 }

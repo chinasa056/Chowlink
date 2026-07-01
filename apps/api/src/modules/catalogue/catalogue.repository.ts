@@ -56,4 +56,26 @@ export class CatalogueRepository {
       },
     });
   }
+
+  async findMenuItemsById(menuItemId: string[]) {
+    return this.prisma.menuItem.findMany({
+      where: {
+        id: {
+          in: menuItemId,
+        },
+      },
+    });
+  }
+
+  async findMenuItemById(menuItemId: string) {
+    return this.prisma.menuItem.findUnique({
+      where: { id: menuItemId },
+    });
+  }
+
+  async findRestaurantById(restaurantId: string) {
+    return this.prisma.restaurant.findUnique({
+      where: { id: restaurantId },
+    });
+  }
 }

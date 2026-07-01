@@ -1,297 +1,320 @@
 generator client {
-provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-provider = "mysql"
-url      = env("DATABASE_URL")
+  provider = "mysql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
-SUPER_ADMIN
-COMPANY_ADMIN
-EMPLOYEE
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  EMPLOYEE
 }
 
 enum OrderStatus {
-PENDING
-AGGREGATED
-DISPATCHED
-IN_TRANSIT
-DELIVERED
-FAILED
-EXPIRED
-CANCELLED
+  PENDING
+  AGGREGATED
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
+  EXPIRED
+  CANCELLED
 }
 
 enum DeliveryStatus {
-PENDING
-DISPATCHED
-IN_TRANSIT
-DELIVERED
-FAILED
+  PENDING
+  DISPATCHED
+  IN_TRANSIT
+  DELIVERED
+  FAILED
 }
 
 enum WalletTransactionType {
-CREDIT
-DEBIT
-REFUND
+  CREDIT
+  DEBIT
+  REFUND
 }
 
 enum OutboxStatus {
-PENDING
-PROCESSING
-SENT
-FAILED
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
 }
 
 model Organization {
-id                 String       @id @default(uuid())
-name               String
-industry           String?
-orderingCutoffTime String
-isActive           Boolean      @default(true)
+  id                 String  @id @default(uuid())
+  name               String
+  industry           String?
+  orderingCutoffTime String
+  isActive           Boolean @default(true)
 
-users              User[]
-departments        Department[]
-orders             Order[]
+  users       User[]
+  departments Department[]
+  orders      Order[]
 
-wallet             Wallet?
+  wallet Wallet?
 
-createdAt          DateTime     @default(now())
-updatedAt          DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([name])
+  @@index([name])
 }
 
 model Department {
-id              String        @id @default(uuid())
-name            String
+  id   String @id @default(uuid())
+  name String
 
-organizationId  String
-organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-users           User[]
+  users User[]
 
-createdAt       DateTime      @default(now())
-updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@unique([organizationId, name])
+  @@unique([organizationId, name])
 }
 
 model User {
-id              String       @id @default(uuid())
+  id String @id @default(uuid())
 
-firstName       String
-lastName        String
+  firstName String
+  lastName  String
 
-email           String       @unique
-password        String
+  email    String @unique
+  password String
 
-role            UserRole
-refreshToken   String? @db.Text
+  role         UserRole
+  refreshToken String?  @db.Text
 
-organizationId  String
-organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-departmentId    String?
-department      Department?  @relation(fields: [departmentId], references: [id])
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
 
-orders          Order[]
+  orders Order[]
 
-notifications   Notification[]
+  notifications Notification[]
 
-createdAt       DateTime     @default(now())
-updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([email])
+  @@index([email])
 }
 
 model Wallet {
-id               String      @id @default(uuid())
+  id String @id @default(uuid())
 
-organizationId   String      @unique
-organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-balance          Decimal      @db.Decimal(12,2)
-currency         String       @default("NGN")
+  balance  Decimal @db.Decimal(12, 2)
+  currency String  @default("NGN")
 
-transactions     WalletTransaction[]
+  transactions WalletTransaction[]
 
-createdAt        DateTime     @default(now())
-updatedAt        DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model WalletTransaction {
-id            String                 @id @default(uuid())
+  id String @id @default(uuid())
 
-walletId      String
-wallet        Wallet                 @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
 
-amount        Decimal                @db.Decimal(12,2)
+  amount Decimal @db.Decimal(12, 2)
 
-type          WalletTransactionType
+  type WalletTransactionType
 
-reference      String           @unique
+  reference String @unique
 
-description   String?
+  description String?
 
-createdAt     DateTime               @default(now())
+  createdAt DateTime @default(now())
 
-@@index([walletId])
+  @@index([walletId])
 }
 
 model Restaurant {
-id            String       @id @default(uuid())
+  id String @id @default(uuid())
 
-name          String
-description   String?
+  name        String
+  description String?
 
-isActive      Boolean      @default(true)
+  isActive Boolean @default(true)
 
-menuItems     MenuItem[]
+  menuItems MenuItem[]
 
-createdAt     DateTime     @default(now())
-updatedAt     DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([name])
+  @@index([name])
 }
 
 model MenuItem {
-id              String       @id @default(uuid())
+  id String @id @default(uuid())
 
-restaurantId    String
-restaurant      Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-name            String
-description     String?
+  name        String
+  description String?
 
-price           Decimal      @db.Decimal(12,2)
+  price Decimal @db.Decimal(12, 2)
 
-isAvailable     Boolean      @default(true)
+  isAvailable Boolean @default(true)
 
-orderItems      OrderItem[]
+  orderItems OrderItem[]
 
-createdAt       DateTime     @default(now())
-updatedAt       DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([restaurantId])
+  @@index([restaurantId])
 }
 
 model Order {
-id               String        @id @default(uuid())
+  id String @id @default(uuid())
 
-userId           String
-user             User          @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-organizationId   String
-organization     Organization  @relation(fields: [organizationId], references: [id])
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
 
-status           OrderStatus   @default(PENDING)
+  status OrderStatus @default(PENDING)
 
-totalAmount      Decimal       @db.Decimal(12,2)
+  totalAmount    Decimal @db.Decimal(12, 2)
+  idempotencyKey String? @unique
 
-notes            String?
+  notes String?
 
-orderItems       OrderItem[]
+  orderItems OrderItem[]
 
-delivery         Delivery?
+  delivery Delivery?
 
-createdAt        DateTime      @default(now())
-updatedAt        DateTime      @updatedAt
+  batch OrderBatch? @relation(fields: [orderBatchId], references: [id])
 
-@@index([status])
-@@index([userId])
-@@index([organizationId])
+  aggregatedAt DateTime?
+  dispatchedAt DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orderBatchId String?
+
+  @@index([status])
+  @@index([userId])
+  @@index([organizationId])
 }
 
 model OrderItem {
-id            String      @id @default(uuid())
+  id String @id @default(uuid())
 
-orderId       String
-order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-menuItemId    String
-menuItem      MenuItem    @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
 
-quantity      Int
+  quantity Int
 
-price         Decimal     @db.Decimal(12,2)
+  price Decimal @db.Decimal(12, 2)
 
-createdAt     DateTime    @default(now())
+  createdAt DateTime @default(now())
 
-@@index([orderId])
+  @@index([orderId])
+}
+
+model OrderBatch {
+  id String @id @default(uuid())
+
+  restaurantId String
+
+  dispatchDate DateTime
+
+  createdAt DateTime @default(now())
+
+  orders Order[]
 }
 
 model Delivery {
-id                  String           @id @default(uuid())
+  id String @id @default(uuid())
 
-orderId             String           @unique
-order               Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @unique
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-chowdeckDeliveryId  String?          @unique
+  chowdeckDeliveryId String? @unique
 
-status              DeliveryStatus   @default(PENDING)
+  status DeliveryStatus @default(PENDING)
 
-estimatedArrival    DateTime?
-deliveredAt         DateTime?
+  estimatedArrival DateTime?
+  deliveredAt      DateTime?
+  redeliveryCount  Int       @default(0)
 
-createdAt           DateTime         @default(now())
-updatedAt           DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([status])
+  @@index([status])
 }
 
 model Notification {
-id             String      @id @default(uuid())
+  id String @id @default(uuid())
 
-userId         String
-user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-title          String
-message        String
+  title   String
+  message String
 
-isRead         Boolean     @default(false)
+  isRead Boolean @default(false)
 
-createdAt      DateTime    @default(now())
+  createdAt DateTime @default(now())
 
-@@index([userId])
+  @@index([userId])
 }
 
 model OutboxEvent {
-id              String        @id @default(uuid())
+  id String @id @default(uuid())
 
-aggregateId     String
-aggregateType   String
+  aggregateId   String
+  aggregateType String
 
-eventType       String
+  eventType String
 
-payload         Json
+  payload Json
 
-status          OutboxStatus  @default(PENDING)
+  status OutboxStatus @default(PENDING)
 
-retryCount      Int           @default(0)
+  retryCount  Int       @default(0)
+  processedAt DateTime?
 
-createdAt       DateTime      @default(now())
-updatedAt       DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-@@index([status])
+  @@index([status])
 }
 
 model AuditLog {
-id            String      @id @default(uuid())
+  id String @id @default(uuid())
 
-actorId       String?
+  actorId String?
 
-action        String
+  action String
 
-entityType    String
-entityId      String
+  entityType String
+  entityId   String
 
-metadata      Json?
+  metadata Json?
 
-createdAt     DateTime    @default(now())
+  createdAt DateTime @default(now())
 
-@@index([entityType])
-@@index([entityId])
+  @@index([entityType])
+  @@index([entityId])
 }
