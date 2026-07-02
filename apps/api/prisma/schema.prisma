@@ -199,6 +199,7 @@ model Order {
   delivery Delivery?
 
   batch OrderBatch? @relation(fields: [orderBatchId], references: [id])
+  orderBatchId String?
 
   aggregatedAt DateTime?
   dispatchedAt DateTime?
@@ -207,7 +208,6 @@ model Order {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  orderBatchId String?
 
   @@index([status])
   @@index([userId])

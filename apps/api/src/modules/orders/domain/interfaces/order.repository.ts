@@ -1,5 +1,6 @@
 // 
 
+import { Order, Prisma } from '@prisma/client';
 import { OrderEntity } from '../entities/order.entities';
 
 export interface OrderRepository {
@@ -12,6 +13,29 @@ export interface OrderRepository {
   findPendingOrders(): Promise<OrderEntity[]>;
 
   findAggregatedOrders(): Promise<OrderEntity[]>;
+
+  /**
+ * Returns every pending order
+ * together with its items.
+ */
+// findPendingOrders(): Promise<Order[]>;
+
+/**
+ * Updates an existing order.
+ */
+update(id: string, data: Partial<Order>): Promise<Order>;
+
+/**
+ * Creates a new Order Batch.
+ */
+createBatch(data: {restaurantId: string; dispatchDate: Date}): Promise<{id: string;}>;
+
+/**
+ * Assigns an Order to a Batch.
+ */
+assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
+
+aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
 }
 
 

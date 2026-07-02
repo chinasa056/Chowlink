@@ -1,10 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  Order,
-  OrderItem,
-  Prisma,
-} from '@prisma/client';
+import { Order, OrderItem, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../../common/database/prisma/prisma.service';
 
@@ -34,9 +30,7 @@ import { OrderItemEntity } from '../../domain/entities/order-item.entity';
  * a single line inside the Use Cases.
  */
 @Injectable()
-export class PrismaOrderRepository
-  implements OrderRepository
-{
+export class PrismaOrderRepository implements OrderRepository {
   constructor(
     /**
      * PrismaService is our gateway
@@ -50,69 +44,65 @@ export class PrismaOrderRepository
   ) {}
 
   /**
- * Converts a Domain Entity into
- * Prisma data.
- */
-private toPersistence(order: OrderEntity) {
-  return {
-    userId: order.userId,
+   * Converts a Domain Entity into
+   * Prisma data.
+   */
+  private toPersistence(order: OrderEntity) {
+    return {
+      userId: order.userId,
 
-    organizationId: order.organizationId,
+      organizationId: order.organizationId,
 
-    status: order.status,
+      status: order.status,
 
-    totalAmount: order.totalAmount,
+      totalAmount: order.totalAmount,
 
-    notes: order.notes,
+      notes: order.notes,
 
-    aggregatedAt: order.aggregatedAt,
+      aggregatedAt: order.aggregatedAt,
 
-    dispatchedAt: order.dispatchedAt,
+      dispatchedAt: order.dispatchedAt,
 
-    completedAt: order.completedAt,
+      completedAt: order.completedAt,
 
-    cancelledAt: order.cancelledAt,
-  };
-}
+      cancelledAt: order.cancelledAt,
+    };
+  }
 
-/**
- * Converts a Prisma model back into
- * our Domain Entity.
- */
-private toDomain(
-  order: Order & {
-    orderItems: OrderItem[];
-  },
-): OrderEntity {
-  return OrderEntity.fromPersistence({
-    id: order.id,
+  /**
+   * Converts a Prisma model back into
+   * our Domain Entity.
+   */
+  private toDomain(
+    order: Order & {
+      orderItems: OrderItem[];
+    },
+  ): OrderEntity {
+    return OrderEntity.fromPersistence({
+      id: order.id,
 
-    userId: order.userId,
+      userId: order.userId,
 
-    organizationId: order.organizationId,
+      organizationId: order.organizationId,
 
-    status: order.status as any,
+      status: order.status as any,
 
-    notes: order.notes ?? undefined,
+      notes: order.notes ?? undefined,
 
-    aggregatedAt: order.aggregatedAt ?? undefined,
+      aggregatedAt: order.aggregatedAt ?? undefined,
 
-    dispatchedAt: order.dispatchedAt ?? undefined,
+      dispatchedAt: order.dispatchedAt ?? undefined,
 
-    completedAt: order.completedAt ?? undefined,
+      completedAt: order.completedAt ?? undefined,
 
-    cancelledAt: order.cancelledAt ?? undefined,
+      cancelledAt: order.cancelledAt ?? undefined,
 
-    items: order.orderItems.map(
-      (item) =>
-        new OrderItemEntity(
-          item.menuItemId,
-          item.quantity,
-          item.price,
-        ),
-    ),
-  });
-}
+      items: order.orderItems.map(
+        (item) =>
+          new OrderItemEntity(item.menuItemId, item.quantity, item.price),
+      ),
+    });
+  }
   /**
    * Creates a brand new Order.
    *
@@ -128,38 +118,36 @@ private toDomain(
    *
    * Those belong elsewhere.
    */
-async create(order: OrderEntity): Promise<OrderEntity> {
-  const created = await this.prisma.order.create({
-    data: this.toPersistence(order),
-    include: {
-      orderItems: true,
-    },
-  });
+  async create(order: OrderEntity): Promise<OrderEntity> {
+    const created = await this.prisma.order.create({
+      data: this.toPersistence(order),
+      include: {
+        orderItems: true,
+      },
+    });
 
-  return this.toDomain(created);
-}
+    return this.toDomain(created);
+  }
 
   /**
    * Retrieves an Order using
    * its unique identifier.
    */
-async findById(
-  id: string,
-): Promise<OrderEntity | null> {
-  const order = await this.prisma.order.findUnique({
-    where: { id },
+  async findById(id: string): Promise<OrderEntity | null> {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
 
-    include: {
-      orderItems: true,
-    },
-  });
+      include: {
+        orderItems: true,
+      },
+    });
 
-  if (!order) {
-    return null;
+    if (!order) {
+      return null;
+    }
+
+    return this.toDomain(order);
   }
-
-  return this.toDomain(order);
-}
 
   /**
    * Updates an existing Order.
@@ -169,21 +157,21 @@ async findById(
    *
    * It simply persists the changes.
    */
-async save(order: OrderEntity): Promise<OrderEntity> {
-  const updated = await this.prisma.order.update({
-    where: {
-      id: order.id!,
-    },
+  async save(order: OrderEntity): Promise<OrderEntity> {
+    const updated = await this.prisma.order.update({
+      where: {
+        id: order.id!,
+      },
 
-    data: this.toPersistence(order),
+      data: this.toPersistence(order),
 
-    include: {
-      orderItems: true,
-    },
-  });
+      include: {
+        orderItems: true,
+      },
+    });
 
-  return this.toDomain(updated);
-}
+    return this.toDomain(updated);
+  }
 
   /**
    * Returns every Order waiting
@@ -193,19 +181,24 @@ async save(order: OrderEntity): Promise<OrderEntity> {
    * will use this method every day
    * at 11:30 AM.
    */
-async findPendingOrders(): Promise<OrderEntity[]> {
-  const orders = await this.prisma.order.findMany({
-    where: {
-      status: 'PENDING',
-    },
+  async findPendingOrders(): Promise<OrderEntity[]> {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: 'PENDING',
+      },
 
-    include: {
-      orderItems: true,
-    },
-  });
+      include: {
+        //   orderItems: true,
+        orderItems: {
+          include: {
+            menuItem: true,
+          },
+        },
+      },
+    });
 
-  return orders.map(this.toDomain.bind(this));
-}
+    return orders.map(this.toDomain.bind(this));
+  }
 
   /**
    * Returns Orders already grouped
@@ -216,19 +209,19 @@ async findPendingOrders(): Promise<OrderEntity[]> {
    * this method after aggregation
    * completes.
    */
- async findAggregatedOrders(): Promise<OrderEntity[]> {
-  const orders = await this.prisma.order.findMany({
-    where: {
-      status: 'AGGREGATED',
-    },
+  async findAggregatedOrders(): Promise<OrderEntity[]> {
+    const orders = await this.prisma.order.findMany({
+      where: {
+        status: 'AGGREGATED',
+      },
 
-    include: {
-      orderItems: true,
-    },
-  });
+      include: {
+        orderItems: true,
+      },
+    });
 
-  return orders.map(this.toDomain.bind(this));
-}
+    return orders.map(this.toDomain.bind(this));
+  }
 
   /**
    * Creates every OrderItem belonging
@@ -247,9 +240,7 @@ async findPendingOrders(): Promise<OrderEntity[]> {
    *
    * inside one transaction.
    */
-  async createOrderItems(
-    items: Prisma.OrderItemCreateManyInput[],
-  ) {
+  async createOrderItems(items: Prisma.OrderItemCreateManyInput[]) {
     return this.prisma.orderItem.createMany({
       data: items,
     });
@@ -268,11 +259,58 @@ async findPendingOrders(): Promise<OrderEntity[]> {
    *
    * That guarantees consistency.
    */
-  async createOutboxEvent(
-    data: Prisma.OutboxEventCreateInput,
-  ) {
+  async createOutboxEvent(data: Prisma.OutboxEventCreateInput) {
     return this.prisma.outboxEvent.create({
       data,
     });
   }
+
+  async createBatch(data: { restaurantId: string; dispatchDate: Date }) {
+    return this.prisma.orderBatch.create({
+      data,
+    });
+  }
+
+  async assignOrderToBatch(orderId: string, batchId: string) {
+    await this.prisma.order.update({
+      where: {
+        id: orderId,
+      },
+      data: {
+        orderBatchId: batchId,
+      },
+    });
+  }
+
+  async aggregateOrder(
+    order: OrderEntity,
+    batchId: string,
+    tx: Prisma.TransactionClient,
+): Promise<void> {
+
+    await tx.order.update({
+
+        where: {
+
+            id: order.id!,
+
+        },
+
+        data: {
+
+            status: order.status,
+
+            aggregatedAt: order.aggregatedAt,
+
+            orderBatchId: batchId,
+
+        },
+
+    });
+
+}
+
+//   async update(id: string, data: Partial<Order>): Promise<Order> {
+      
+//   }
 }
