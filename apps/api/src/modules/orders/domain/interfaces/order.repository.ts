@@ -23,7 +23,7 @@ export interface OrderRepository {
 /**
  * Updates an existing order.
  */
-update(id: string, data: Partial<Order>): Promise<Order>;
+// update(id: string, data: Partial<Order>): Promise<Order>;
 
 /**
  * Creates a new Order Batch.
