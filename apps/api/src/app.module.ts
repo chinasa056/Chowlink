@@ -7,22 +7,22 @@ import { OrganizationsModule } from './modules/organization/organizations.module
 import { CatalogueModule } from './modules/catalogue/catalogue.module';
 import { RedisModule } from './common/cache/redis.module';
 import { WalletModule } from './modules/wallets/wallet.module';
-import { BullModule } from '@nestjs/bullmq';
 import { AppBullMQModule } from './common/queues/bullmq.module';
+import { OrdersModule } from './modules/orders/orders.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-  AppBullMQModule,
-
+    AppBullMQModule,
     PrismaModule,
     AuthModule,
     OrganizationsModule,
     CatalogueModule,
     RedisModule,
     WalletModule,
+    OrdersModule,
   ],
 })
 export class AppModule {}

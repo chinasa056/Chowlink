@@ -310,6 +310,59 @@ export class PrismaOrderRepository implements OrderRepository {
 
 }
 
+  async hasDeliveryForOrder(orderId: string): Promise<boolean> {
+    const delivery = await this.prisma.delivery.findUnique({
+      where: { orderId },
+      select: { id: true },
+    });
+    return !!delivery;
+  }
+
+  async saveDispatchTransaction(
+    order: OrderEntity,
+    deliveryData: {
+      providerReference: string;
+      providerDeliveryId: string;
+      trackingUrl?: string;
+      deliveryFee?: number;
+      provider: 'CHOWDECK';
+      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED';
+    },
+    outboxEventData: {
+      aggregateId: string;
+      aggregateType: string;
+      eventType: string;
+      payload: any;
+    }
+  ): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      // Create Delivery
+      await tx.delivery.create({
+        data: {
+          orderId: order.id!,
+          ...deliveryData,
+        },
+      });
+
+      // Update Order
+      await tx.order.update({
+        where: { id: order.id! },
+        data: {
+          status: order.status,
+          dispatchedAt: order.dispatchedAt,
+        },
+      });
+
+      // Insert Outbox Event
+      await tx.outboxEvent.create({
+        data: {
+          ...outboxEventData,
+        },
+      });
+    });
+  }
+
+
 //   async update(id: string, data: Partial<Order>): Promise<Order> {
       
 //   }

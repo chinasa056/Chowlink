@@ -35,8 +35,29 @@ createBatch(data: {restaurantId: string; dispatchDate: Date}): Promise<{id: stri
  */
 assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
 
-aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
+  aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
+
+  hasDeliveryForOrder(orderId: string): Promise<boolean>;
+
+  saveDispatchTransaction(
+    order: OrderEntity,
+    deliveryData: {
+      providerReference: string;
+      providerDeliveryId: string;
+      trackingUrl?: string;
+      deliveryFee?: number;
+      provider: 'CHOWDECK';
+      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED';
+    },
+    outboxEventData: {
+      aggregateId: string;
+      aggregateType: string;
+      eventType: string;
+      payload: any;
+    }
+  ): Promise<void>;
 }
+
 
 
 // /**

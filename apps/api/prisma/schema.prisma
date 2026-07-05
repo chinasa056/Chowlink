@@ -45,6 +45,10 @@ enum OutboxStatus {
   FAILED
 }
 
+enum DeliveryProvider {
+  CHOWDECK
+}
+
 model Organization {
   id                 String  @id @default(uuid())
   name               String
@@ -250,7 +254,11 @@ model Delivery {
   orderId String @unique
   order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  chowdeckDeliveryId String? @unique
+  providerDeliveryId String? @unique
+  providerReference String? @unique
+  trackingUrl String?
+  deliveryFee Int?
+  provider DeliveryProvider
 
   status DeliveryStatus @default(PENDING)
 
@@ -317,4 +325,18 @@ model AuditLog {
 
   @@index([entityType])
   @@index([entityId])
+}
+
+model Address {
+  id String @id @default(uuid())
+
+  latitude  Float
+  longitude Float
+
+  label String?
+
+  organizationId String?
+  restaurantId   String?
+
+  createdAt DateTime @default(now())
 }
