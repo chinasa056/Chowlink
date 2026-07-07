@@ -193,3 +193,25 @@ POST /wallets/:organizationId/refund
 ---
 
 GET /wallets/:organizationId/transactions
+
+# ORDERS
+
+---
+
+## Cancel Order
+
+POST /orders/:id/cancel
+
+Request
+
+{
+  "reason": "Customer requested cancellation"
+}
+
+Response
+
+200 OK
+
+{
+  "success": true
+}

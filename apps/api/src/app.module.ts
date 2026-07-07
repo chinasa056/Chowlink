@@ -9,6 +9,7 @@ import { RedisModule } from './common/cache/redis.module';
 import { WalletModule } from './modules/wallets/wallet.module';
 import { AppBullMQModule } from './common/queues/bullmq.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { EventsModule } from './common/events/events.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     }),
     AppBullMQModule,
     PrismaModule,
+    EventsModule,
     AuthModule,
     OrganizationsModule,
     CatalogueModule,
@@ -26,3 +28,4 @@ import { OrdersModule } from './modules/orders/orders.module';
   ],
 })
 export class AppModule {}
+

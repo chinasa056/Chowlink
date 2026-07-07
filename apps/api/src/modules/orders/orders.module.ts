@@ -4,10 +4,15 @@ import { Module } from '@nestjs/common';
 import { ORDER_QUEUE } from '../../common/queues/bullmq.cnstants';
 import { AggregateOrdersUseCase } from './application/use-cases/aggregate-orders.use-case';
 import { DispatchOrderUseCase } from './application/use-cases/dispatch-order.use-case';
+import { CancelOrderUseCase } from './application/use-cases/cancel-order.use-case';
+import { PlaceOrderUseCase } from './application/use-cases/place-order.use-case';
 import { AggregationScheduler } from './infrastructure/queues/aggregation.scheduler';
 import { AggregationProcessor } from './infrastructure/queues/aggregation.processor';
 import { DispatchProcessor } from './infrastructure/queues/dispatch.processor';
 import { ChowdeckRelayClient } from '../../infrastructure/integrations/chowdeck/chowdeck.relay.client';
+import { OrderRepository } from './domain/interfaces/order.repository';
+import { PrismaOrderRepository } from './infrastructure/persistence/prisma-order.repository';
+import { OrdersController } from './presentation/controllers/orders.controller';
 
 @Module({
   imports: [
@@ -16,6 +21,8 @@ import { ChowdeckRelayClient } from '../../infrastructure/integrations/chowdeck/
     }),
   ],
 
+  controllers: [OrdersController],
+
   providers: [
     /**
      * Use Cases
@@ -23,6 +30,18 @@ import { ChowdeckRelayClient } from '../../infrastructure/integrations/chowdeck/
     AggregateOrdersUseCase,
 
     DispatchOrderUseCase,
+
+    CancelOrderUseCase,
+
+    PlaceOrderUseCase,
+
+    /**
+     * Repositories
+     */
+    {
+      provide: OrderRepository,
+      useClass: PrismaOrderRepository,
+    },
 
     /**
      * Queue Scheduler (registers repeatable jobs)

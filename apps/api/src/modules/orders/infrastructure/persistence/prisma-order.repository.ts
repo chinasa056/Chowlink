@@ -326,7 +326,7 @@ export class PrismaOrderRepository implements OrderRepository {
       trackingUrl?: string;
       deliveryFee?: number;
       provider: 'CHOWDECK';
-      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED';
+      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
     },
     outboxEventData: {
       aggregateId: string;
@@ -362,8 +362,59 @@ export class PrismaOrderRepository implements OrderRepository {
     });
   }
 
+  /**
+   * Performs an atomic database transaction to update Order and Delivery to CANCELLED,
+   * write the cancel reason and cancel timestamp, and log the OrderCancelledEvent to the Outbox.
+   */
+  async saveCancelTransaction(
+    order: OrderEntity,
+    cancelReason: string,
+    outboxEventData: {
+      aggregateId: string;
+      aggregateType: string;
+      eventType: string;
+      payload: any;
+    }
+  ): Promise<void> {
+    /**
+     * STEP 1 — Begin database transaction.
+     * All operations inside must either succeed together or roll back.
+     */
+    await this.prisma.$transaction(async (tx) => {
+      /**
+       * STEP 2 — Update Delivery status, cancelledAt, and cancelReason.
+       */
+      await tx.delivery.update({
+        where: { orderId: order.id! },
+        data: {
+          status: 'CANCELLED',
+          cancelledAt: new Date(),
+          cancelReason: cancelReason,
+        },
+      });
 
-//   async update(id: string, data: Partial<Order>): Promise<Order> {
-      
-//   }
+      /**
+       * STEP 3 — Update Order status and cancelledAt.
+       */
+      await tx.order.update({
+        where: { id: order.id! },
+        data: {
+          status: order.status,
+          cancelledAt: order.cancelledAt,
+        },
+      });
+
+      /**
+       * STEP 4 — Log OrderCancelledEvent into the Outbox.
+       */
+      await tx.outboxEvent.create({
+        data: {
+          ...outboxEventData,
+        },
+      });
+    });
+  }
 }
+
+// Next in sequence: apps/api/src/common/queues/outbox.processor.ts
+

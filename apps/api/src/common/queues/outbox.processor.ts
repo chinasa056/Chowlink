@@ -205,6 +205,18 @@ export class OutboxProcessor extends WorkerHost {
         );
         break;
 
+      /**
+       * OrderCancelledEvent
+       *
+       * The order cancellation has been successfully persisted.
+       * Future jobs: Refund wallet, send cancellation email, notify admins.
+       */
+      case 'ORDER_CANCELLED':
+        this.logger.log(
+          `[Outbox] ORDER_CANCELLED for order ${event.payload?.orderId} — notification and refund jobs not yet implemented`,
+        );
+        break;
+
       default:
         this.logger.warn(
           `[Outbox] Unknown event type: ${event.eventType} — no routing configured`,
@@ -212,3 +224,6 @@ export class OutboxProcessor extends WorkerHost {
     }
   }
 }
+
+// End of order cancellation sequence.
+

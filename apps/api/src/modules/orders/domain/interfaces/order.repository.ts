@@ -1,45 +1,32 @@
-// 
-
 import { Order, Prisma } from '@prisma/client';
 import { OrderEntity } from '../entities/order.entities';
 
-export interface OrderRepository {
-  create(order: OrderEntity): Promise<OrderEntity>;
+export abstract class OrderRepository {
+  abstract create(order: OrderEntity): Promise<OrderEntity>;
 
-  save(order: OrderEntity): Promise<OrderEntity>;
+  abstract save(order: OrderEntity): Promise<OrderEntity>;
 
-  findById(id: string): Promise<OrderEntity | null>;
+  abstract findById(id: string): Promise<OrderEntity | null>;
 
-  findPendingOrders(): Promise<OrderEntity[]>;
+  abstract findPendingOrders(): Promise<OrderEntity[]>;
 
-  findAggregatedOrders(): Promise<OrderEntity[]>;
+  abstract findAggregatedOrders(): Promise<OrderEntity[]>;
 
   /**
- * Returns every pending order
- * together with its items.
- */
-// findPendingOrders(): Promise<Order[]>;
+   * Creates a new Order Batch.
+   */
+  abstract createBatch(data: {restaurantId: string; dispatchDate: Date}): Promise<{id: string;}>;
 
-/**
- * Updates an existing order.
- */
-// update(id: string, data: Partial<Order>): Promise<Order>;
+  /**
+   * Assigns an Order to a Batch.
+   */
+  abstract assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
 
-/**
- * Creates a new Order Batch.
- */
-createBatch(data: {restaurantId: string; dispatchDate: Date}): Promise<{id: string;}>;
+  abstract aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
 
-/**
- * Assigns an Order to a Batch.
- */
-assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
+  abstract hasDeliveryForOrder(orderId: string): Promise<boolean>;
 
-  aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
-
-  hasDeliveryForOrder(orderId: string): Promise<boolean>;
-
-  saveDispatchTransaction(
+  abstract saveDispatchTransaction(
     order: OrderEntity,
     deliveryData: {
       providerReference: string;
@@ -47,7 +34,7 @@ assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
       trackingUrl?: string;
       deliveryFee?: number;
       provider: 'CHOWDECK';
-      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED';
+      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
     },
     outboxEventData: {
       aggregateId: string;
@@ -56,7 +43,32 @@ assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
       payload: any;
     }
   ): Promise<void>;
+
+  /**
+   * Atomic Transaction for cancelling an Order.
+   *
+   * Persists the Order status as CANCELLED, the Delivery status as CANCELLED,
+   * stores the cancellation reason and timestamp, and writes an OutboxEvent.
+   *
+   * @param order - The Order domain entity in its cancelled state.
+   * @param cancelReason - The reason for cancelling the delivery.
+   * @param outboxEventData - Payload for creating the outbox event.
+   */
+  abstract saveCancelTransaction(
+    order: OrderEntity,
+    cancelReason: string,
+    outboxEventData: {
+      aggregateId: string;
+      aggregateType: string;
+      eventType: string;
+      payload: any;
+    }
+  ): Promise<void>;
 }
+
+
+// Next in sequence: apps/api/src/modules/orders/infrastructure/persistence/prisma-order.repository.ts
+
 
 
 

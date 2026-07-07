@@ -30,6 +30,7 @@ enum DeliveryStatus {
   IN_TRANSIT
   DELIVERED
   FAILED
+  CANCELLED
 }
 
 enum WalletTransactionType {
@@ -264,6 +265,8 @@ model Delivery {
 
   estimatedArrival DateTime?
   deliveredAt      DateTime?
+  cancelledAt      DateTime?
+  cancelReason     String?
   redeliveryCount  Int       @default(0)
 
   createdAt DateTime @default(now())

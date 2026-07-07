@@ -17,7 +17,7 @@ import { DomainEvent } from './domain-event';
  * Any implementation that satisfies this contract
  * can be swapped in without changing business logic.
  */
-export interface DomainEventPublisher {
+export abstract class DomainEventPublisher {
   /**
    * Publish a domain event.
    *
@@ -25,11 +25,12 @@ export interface DomainEventPublisher {
    * can be written to the Outbox table inside the
    * same database transaction as the business data.
    */
-  publish(
+  abstract publish(
     event: DomainEvent,
     tx: Prisma.TransactionClient,
   ): Promise<void>;
 }
+
 
 // import { DomainEvent } from './domain-event';
 

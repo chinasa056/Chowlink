@@ -135,3 +135,36 @@ export class OrderCompletedEvent
     };
   }
 }
+
+/**
+ * Published after an order has been successfully cancelled
+ * both in Chowdeck and in our local database.
+ */
+export class OrderCancelledEvent
+  implements DomainEvent
+{
+  aggregateId: string;
+
+  aggregateType = 'ORDER';
+
+  eventType = 'ORDER_CANCELLED';
+
+  occurredAt = new Date();
+
+  version = 1;
+
+  payload: Record<string, any>;
+
+  constructor(
+    orderId: string,
+    reason: string,
+  ) {
+    this.aggregateId = orderId;
+
+    this.payload = {
+      orderId,
+      reason,
+      cancelledAt: this.occurredAt,
+    };
+  }
+}
