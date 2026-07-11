@@ -7,7 +7,7 @@ export class JwtTokenService {
 
   async signAccessToken(payload: any) {
     return this.jwt.signAsync(payload, {
-      expiresIn: '15m',
+      expiresIn: '1d',
     });
   }
 

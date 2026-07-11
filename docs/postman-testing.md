@@ -124,6 +124,7 @@ GET /organizations/:id
 
 ---
 
+**Create restaurant**
 POST /catalogue/restaurants
 
 {
@@ -143,15 +144,16 @@ POST /catalogue/restaurants/:restaurantId/menu-items
 }
 
 ---
-
+**Get all restaurants
 GET /catalogue/restaurants
 
 ---
-
+**Get Restaurants and their associated menu items**
 GET /catalogue/restaurants/:id
 
 ---
 
+**Get a single Restaurant and its menu items**
 GET /catalogue/restaurants/:id/menu-items
 
 

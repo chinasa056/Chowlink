@@ -13,6 +13,11 @@ import { ChowdeckRelayClient } from '../../infrastructure/integrations/chowdeck/
 import { OrderRepository } from './domain/interfaces/order.repository';
 import { PrismaOrderRepository } from './infrastructure/persistence/prisma-order.repository';
 import { OrdersController } from './presentation/controllers/orders.controller';
+import { CatalogueModule } from '../catalogue/catalogue.module';
+import { CatalogueService } from '../catalogue/catalogue.service';
+import { WalletService } from '../wallets/wallet.service';
+import { CatalogueRepository } from '../catalogue/catalogue.repository';
+import { WalletRepository } from '../wallets/wallet.repsitory';
 
 @Module({
   imports: [
@@ -34,6 +39,10 @@ import { OrdersController } from './presentation/controllers/orders.controller';
     CancelOrderUseCase,
 
     PlaceOrderUseCase,
+    CatalogueService,
+    WalletService,
+    CatalogueRepository,
+    WalletRepository,
 
     /**
      * Repositories

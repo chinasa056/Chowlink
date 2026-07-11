@@ -1,17 +1,18 @@
 import {
+  IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
 export class CreateRestaurantDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsString()
-  address: string;
-
-  @IsString()
-  cuisineType: string;
+  @IsOptional()
+  description: string;
 }
 
 export class CreateMenuItemDto {

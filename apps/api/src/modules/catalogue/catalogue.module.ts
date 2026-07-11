@@ -16,6 +16,7 @@ import { CatalogueRepository } from './catalogue.repository';
 
   exports: [
     CatalogueService,
+    CatalogueRepository
   ],
 })
 export class CatalogueModule {}

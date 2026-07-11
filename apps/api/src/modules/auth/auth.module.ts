@@ -2,18 +2,17 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { AuthController } from './presentation/controllers/auth.controller';
+import { AuthController } from './auth.controller';
 
-import { RegisterUseCase } from './application/use-cases/register.use-case';
-import { LoginUseCase } from './application/use-cases/login.use-case';
+import { AuthService } from './auth.service';
 
-import { PasswordService } from './infrastructure/services/password.service';
-import { JwtTokenService } from './infrastructure/services/jwt.service';
+import { PasswordService } from './services/password.service';
+import { JwtTokenService } from './services/jwt.service';
 
-import { UserRepository } from './domain/interfaces/user.repository';
-import { PrismaUserRepository } from './infrastructure/repositories/prisma-user.repository';
+import { UserRepository } from './interfaces/user.repository';
+import { PrismaUserRepository } from './repositories/prisma-user.repository';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
-import { RefreshUseCase } from './application/use-cases/refresh.use-case';
+import { OrganizationRepository } from '../organization/organization.repository';
 
 @Module({
   imports: [
@@ -32,18 +31,19 @@ import { RefreshUseCase } from './application/use-cases/refresh.use-case';
   controllers: [AuthController],
 
   providers: [
-    RegisterUseCase,
+    AuthService,
     JwtStrategy,
-    LoginUseCase,
 
     PasswordService,
     JwtTokenService,
-    RefreshUseCase,
-
+    OrganizationRepository,
     {
       provide: UserRepository,
       useClass: PrismaUserRepository,
     },
   ],
+  exports:[
+    AuthService
+  ]
 })
 export class AuthModule {}

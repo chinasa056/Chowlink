@@ -10,8 +10,7 @@ export class CatalogueRepository {
 
   async createRestaurant(data: {
     name: string;
-    address: string;
-    cuisineType: string;
+    description?: string;
   }) {
     return this.prisma.restaurant.create({
       data,
