@@ -12,7 +12,8 @@ import { JwtTokenService } from './services/jwt.service';
 import { UserRepository } from './interfaces/user.repository';
 import { PrismaUserRepository } from './repositories/prisma-user.repository';
 import { JwtStrategy } from '../../common/strategies/jwt.strategy';
-import { OrganizationRepository } from '../organization/organization.repository';
+import { OrganizationRepository } from '../organization/interfaces/oeganization.repository';
+import { PrismaOrganizationRepository } from '../organization/repositories/prisma.organization.repository';
 
 @Module({
   imports: [
@@ -36,14 +37,17 @@ import { OrganizationRepository } from '../organization/organization.repository'
 
     PasswordService,
     JwtTokenService,
-    OrganizationRepository,
+
     {
       provide: UserRepository,
       useClass: PrismaUserRepository,
     },
+
+    {
+      provide: OrganizationRepository,
+      useClass: PrismaOrganizationRepository,
+    },
   ],
-  exports:[
-    AuthService
-  ]
+  exports: [AuthService],
 })
 export class AuthModule {}

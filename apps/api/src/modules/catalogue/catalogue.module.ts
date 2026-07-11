@@ -2,21 +2,20 @@ import { Module } from '@nestjs/common';
 
 import { CatalogueController } from './catalogue.controller';
 import { CatalogueService } from './catalogue.service';
-import { CatalogueRepository } from './catalogue.repository';
+import { CatalogueRepository } from './interfaces/catalogue.repository';
+import { PrismaCatalogueRepository } from './repositories/prisma.catalogue.repository';
 
 @Module({
-  controllers: [
-    CatalogueController,
-  ],
+  controllers: [CatalogueController],
 
   providers: [
     CatalogueService,
-    CatalogueRepository,
+    {
+      provide: CatalogueRepository,
+      useClass: PrismaCatalogueRepository,
+    },
   ],
 
-  exports: [
-    CatalogueService,
-    CatalogueRepository
-  ],
+  exports: [CatalogueService, CatalogueRepository],
 })
 export class CatalogueModule {}

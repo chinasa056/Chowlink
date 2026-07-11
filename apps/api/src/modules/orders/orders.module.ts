@@ -16,8 +16,9 @@ import { OrdersController } from './presentation/controllers/orders.controller';
 import { CatalogueModule } from '../catalogue/catalogue.module';
 import { CatalogueService } from '../catalogue/catalogue.service';
 import { WalletService } from '../wallets/wallet.service';
-import { CatalogueRepository } from '../catalogue/catalogue.repository';
 import { WalletRepository } from '../wallets/wallet.repsitory';
+import { CatalogueRepository } from '../catalogue/interfaces/catalogue.repository';
+import { PrismaCatalogueRepository } from '../catalogue/repositories/prisma.catalogue.repository';
 
 @Module({
   imports: [
@@ -41,7 +42,6 @@ import { WalletRepository } from '../wallets/wallet.repsitory';
     PlaceOrderUseCase,
     CatalogueService,
     WalletService,
-    CatalogueRepository,
     WalletRepository,
 
     /**
@@ -51,7 +51,10 @@ import { WalletRepository } from '../wallets/wallet.repsitory';
       provide: OrderRepository,
       useClass: PrismaOrderRepository,
     },
-
+{
+  provide: CatalogueRepository,
+  useClass: PrismaCatalogueRepository
+},
     /**
      * Queue Scheduler (registers repeatable jobs)
      */

@@ -1,33 +1,22 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import { OrganizationService } from './organization.service';
 
 import {
   CreateDepartmentDto,
   CreateOrganizationDto,
-} from './organization.dto';
+} from './dto/organization.dto';
 
 @Controller('organizations')
 export class OrganizationController {
-  constructor(
-    private readonly organizationService:
-      OrganizationService,
-  ) {}
+  constructor(private readonly organizationService: OrganizationService) {}
 
   @Post()
   createOrganization(
     @Body()
     dto: CreateOrganizationDto,
   ) {
-    return this.organizationService.createOrganization(
-      dto,
-    );
+    return this.organizationService.createOrganization(dto);
   }
 
   @Post(':id/departments')
@@ -38,10 +27,7 @@ export class OrganizationController {
     @Body()
     dto: CreateDepartmentDto,
   ) {
-    return this.organizationService.createDepartment(
-      organizationId,
-      dto,
-    );
+    return this.organizationService.createDepartment(organizationId, dto);
   }
 
   @Get()
@@ -54,8 +40,6 @@ export class OrganizationController {
     @Param('id')
     id: string,
   ) {
-    return this.organizationService.getOrganization(
-      id,
-    );
+    return this.organizationService.getOrganization(id);
   }
 }

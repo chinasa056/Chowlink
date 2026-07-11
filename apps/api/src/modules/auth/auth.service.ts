@@ -9,7 +9,7 @@ import { UserRepository } from './interfaces/user.repository';
 import { PasswordService } from './services/password.service';
 import { JwtTokenService } from './services/jwt.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { OrganizationRepository } from '../organization/organization.repository';
+import { OrganizationRepository } from '../organization/interfaces/oeganization.repository';
 
 @Injectable()
 export class AuthService {

@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 
-import { PrismaService } from '../../common/database/prisma/prisma.service';
+import { PrismaService } from '../../../common/database/prisma/prisma.service';
+import { CatalogueRepository } from '../interfaces/catalogue.repository';
+import { MenuItem, Restaurant } from '@prisma/client';
 
 @Injectable()
-export class CatalogueRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+export class PrismaCatalogueRepository implements CatalogueRepository {
+  constructor(private readonly prisma: PrismaService) {}
 
   async createRestaurant(data: {
     name: string;
     description?: string;
-  }) {
+  }): Promise<Restaurant> {
     return this.prisma.restaurant.create({
       data,
     });
@@ -46,9 +46,7 @@ export class CatalogueRepository {
     });
   }
 
-  async getRestaurantMenuItems(
-    restaurantId: string,
-  ) {
+  async getRestaurantMenuItems(restaurantId: string) {
     return this.prisma.menuItem.findMany({
       where: {
         restaurantId,

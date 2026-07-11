@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../common/database/prisma/prisma.service';
+import { PrismaService } from '../../../common/database/prisma/prisma.service';
+import { OrganizationRepository } from '../interfaces/oeganization.repository';
 
 @Injectable()
-export class OrganizationRepository {
-  constructor(
-    private readonly prisma: PrismaService,
-  ) {}
+export class PrismaOrganizationRepository implements OrganizationRepository{
+  constructor(private readonly prisma: PrismaService) {}
 
   async createOrganization(data: {
     name: string;
@@ -17,10 +16,7 @@ export class OrganizationRepository {
     });
   }
 
-  async createDepartment(data: {
-    name: string;
-    organizationId: string;
-  }) {
+  async createDepartment(data: { name: string; organizationId: string }) {
     return this.prisma.department.create({
       data,
     });
