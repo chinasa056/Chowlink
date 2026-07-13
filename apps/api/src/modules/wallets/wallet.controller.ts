@@ -1,48 +1,34 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 
 import {
   DebitWalletDto,
   FundWalletDto,
   RefundWalletDto,
-} from './wallet.dto';
+} from './dto/wallet.dto';
 
 import { WalletService } from './wallet.service';
+import { WalletTransactionResponse } from './interfaces/wallet.interface';
 
 @Controller('wallets')
 export class WalletController {
-  constructor(
-    private readonly walletService: WalletService,
-  ) {}
+  constructor(private readonly walletService: WalletService) {}
 
   @Get(':organizationId')
   getWallet(
     @Param('organizationId')
     organizationId: string,
   ) {
-    return this.walletService.getWallet(
-      organizationId,
-    );
+    return this.walletService.getWallet(organizationId);
   }
 
   @Post(':organizationId/fund')
   fundWallet(
     @Param('organizationId')
     organizationId: string,
-
     @Body()
     dto: FundWalletDto,
-  ) {
-    return this.walletService.fundWallet(
-      organizationId,
-      dto.amount,
-      dto.reference,
-    );
+  ): Promise<WalletTransactionResponse> {
+    return this.walletService.fundWallet(organizationId, dto);
   }
 
   @Post(':organizationId/debit')
@@ -53,12 +39,7 @@ export class WalletController {
     @Body()
     dto: DebitWalletDto,
   ) {
-    return this.walletService.debitWallet(
-      organizationId,
-      dto.amount,
-      dto.reference,
-      dto.description,
-    );
+    return this.walletService.debitWallet(organizationId, dto);
   }
 
   @Post(':organizationId/refund')
@@ -69,12 +50,7 @@ export class WalletController {
     @Body()
     dto: RefundWalletDto,
   ) {
-    return this.walletService.refundWallet(
-      organizationId,
-      dto.amount,
-      dto.reference,
-      dto.description,
-    );
+    return this.walletService.refundWallet(organizationId, dto);
   }
 
   @Get(':organizationId/transactions')
@@ -82,8 +58,6 @@ export class WalletController {
     @Param('organizationId')
     organizationId: string,
   ) {
-    return this.walletService.getTransactions(
-      organizationId,
-    );
+    return this.walletService.getTransactions(organizationId);
   }
 }

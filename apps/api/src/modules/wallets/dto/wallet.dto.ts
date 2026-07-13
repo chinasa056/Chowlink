@@ -5,18 +5,12 @@ import {
 
 export class FundWalletDto {
   @IsNumber()
-  amount: number;
-
-  @IsString()
-  reference: string;
+  amount: number
 }
 
 export class DebitWalletDto {
   @IsNumber()
   amount: number;
-
-  @IsString()
-  reference: string;
 
   @IsString()
   description: string;
@@ -25,9 +19,6 @@ export class DebitWalletDto {
 export class RefundWalletDto {
   @IsNumber()
   amount: number;
-
-  @IsString()
-  reference: string;
 
   @IsString()
   description: string;

@@ -13,10 +13,9 @@ import { ChowdeckRelayClient } from '../../infrastructure/integrations/chowdeck/
 import { OrderRepository } from './domain/interfaces/order.repository';
 import { PrismaOrderRepository } from './infrastructure/persistence/prisma-order.repository';
 import { OrdersController } from './presentation/controllers/orders.controller';
-import { CatalogueModule } from '../catalogue/catalogue.module';
 import { CatalogueService } from '../catalogue/catalogue.service';
 import { WalletService } from '../wallets/wallet.service';
-import { WalletRepository } from '../wallets/wallet.repsitory';
+import { WalletRepository } from '../wallets/repositories/prisma.wallet.repository';
 import { CatalogueRepository } from '../catalogue/interfaces/catalogue.repository';
 import { PrismaCatalogueRepository } from '../catalogue/repositories/prisma.catalogue.repository';
 
@@ -51,10 +50,10 @@ import { PrismaCatalogueRepository } from '../catalogue/repositories/prisma.cata
       provide: OrderRepository,
       useClass: PrismaOrderRepository,
     },
-{
-  provide: CatalogueRepository,
-  useClass: PrismaCatalogueRepository
-},
+    {
+      provide: CatalogueRepository,
+      useClass: PrismaCatalogueRepository,
+    },
     /**
      * Queue Scheduler (registers repeatable jobs)
      */
