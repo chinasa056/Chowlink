@@ -1,4 +1,3 @@
-import { Order, Prisma } from '@prisma/client';
 import { OrderEntity } from '../entities/order.entities';
 
 export abstract class OrderRepository {
@@ -15,14 +14,20 @@ export abstract class OrderRepository {
   /**
    * Creates a new Order Batch.
    */
-  abstract createBatch(data: {restaurantId: string; dispatchDate: Date}): Promise<{id: string;}>;
+  abstract createBatch(data: {
+    restaurantId: string;
+    dispatchDate: Date;
+  }): Promise<{ id: string }>;
 
   /**
    * Assigns an Order to a Batch.
    */
   abstract assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
 
-  abstract aggregateOrder(order: OrderEntity, batchId: string, tx: Prisma.TransactionClient): Promise<void>;
+  abstract aggregateOrder(
+    order: OrderEntity,
+    batchId: string
+  ): Promise<void>;
 
   abstract hasDeliveryForOrder(orderId: string): Promise<boolean>;
 
@@ -34,14 +39,20 @@ export abstract class OrderRepository {
       trackingUrl?: string;
       deliveryFee?: number;
       provider: 'CHOWDECK';
-      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
+      status:
+        | 'PENDING'
+        | 'DISPATCHED'
+        | 'IN_TRANSIT'
+        | 'DELIVERED'
+        | 'FAILED'
+        | 'CANCELLED';
     },
     outboxEventData: {
       aggregateId: string;
       aggregateType: string;
       eventType: string;
       payload: any;
-    }
+    },
   ): Promise<void>;
 
   /**
@@ -62,15 +73,11 @@ export abstract class OrderRepository {
       aggregateType: string;
       eventType: string;
       payload: any;
-    }
+    },
   ): Promise<void>;
 }
 
-
 // Next in sequence: apps/api/src/modules/orders/infrastructure/persistence/prisma-order.repository.ts
-
-
-
 
 // /**
 //  * This interface represents everything

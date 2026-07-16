@@ -2,8 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../../../common/database/prisma/prisma.service';
 
-// import { OrderStatus } from '../../domain/enums/order-status.enum';
-
 import { OrderRepository } from '../../domain/interfaces/order.repository';
 
 import { CatalogueService } from '../../../catalogue/catalogue.service';
@@ -74,7 +72,7 @@ export class PlaceOrderUseCase {
     const items = menuItems.map((menu) => {
       const dtoItem = dto.items.find((item) => item.menuItemId === menu.id)!;
 
-      return new OrderItemEntity(menu.id, dtoItem.quantity, menu.price);
+      return new OrderItemEntity(menu.id, dtoItem.quantity, menu.price.toNumber());
     });
 
     const order = OrderEntity.create({

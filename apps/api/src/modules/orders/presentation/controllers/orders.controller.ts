@@ -1,6 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
 import { CancelOrderUseCase } from '../../application/use-cases/cancel-order.use-case';
 import { CancelOrderDto } from '../dto/cancel-order.dto';
+import { CreateOrderDto } from '../dto/create-order.dto';
+import { PlaceOrderUseCase } from '../../application/use-cases/place-order.use-case';
 
 /**
  * OrdersController
@@ -10,9 +19,18 @@ import { CancelOrderDto } from '../dto/cancel-order.dto';
 @Controller('orders')
 export class OrdersController {
   constructor(
+    private readonly placeOrderUseCase: PlaceOrderUseCase,
     private readonly cancelOrderUseCase: CancelOrderUseCase,
   ) {}
 
+  @Post(':userId/:organizationId')
+  async createOrder(
+    @Body() dto: CreateOrderDto,
+    @Param('userId') userId: string,
+    @Param('organizationId') organizationId: string,
+  ) {
+    await this.placeOrderUseCase.execute(dto, userId, organizationId);
+  }
   /**
    * POST /orders/:id/cancel
    *
@@ -24,10 +42,7 @@ export class OrdersController {
    */
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
-  async cancelOrder(
-    @Param('id') id: string,
-    @Body() dto: CancelOrderDto,
-  ) {
+  async cancelOrder(@Param('id') id: string, @Body() dto: CancelOrderDto) {
     /**
      * Delegate the execution to the CancelOrderUseCase.
      * UseCase handles all domain validation, external client communication, and database updates.

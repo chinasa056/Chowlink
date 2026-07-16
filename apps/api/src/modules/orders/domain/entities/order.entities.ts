@@ -1,32 +1,7 @@
 import { OrderStatus } from '../enums/order-status.enum';
 import { OrderItemEntity } from './order-item.entity';
 
-/**
- * OrderEntity
- *
- * This class represents the business state of an Order.
- *
- * Unlike a Prisma model, this object owns the business rules.
- *
- * Controllers cannot change Order state.
- *
- * BullMQ cannot change Order state.
- *
- * Webhooks cannot change Order state.
- *
- * Every state transition must happen through
- * one of the methods below.
- */
 export class OrderEntity {
-  /**
-   * Constructor is private.
-   *
-   * Nobody should instantiate an Order directly.
-   *
-   * Instead use:
-   *
-   * OrderEntity.create(...)
-   */
   private constructor(
     public readonly id: string | null,
 
@@ -49,10 +24,7 @@ export class OrderEntity {
     private _cancelledAt?: Date,
   ) {}
 
-  /**
-   * Factory method used when creating
-   * a brand new Order.
-   */
+  //  * Factory method used when creating a brand new Order.
   static create(data: {
     userId: string;
     organizationId: string;
@@ -69,10 +41,7 @@ export class OrderEntity {
     );
   }
 
-  /**
-   * Factory method used when rebuilding
-   * an Order from the database.
-   */
+  // Factory method used when rebuilding an Order from the database.
   static fromPersistence(data: {
     id: string;
     userId: string;
@@ -99,41 +68,20 @@ export class OrderEntity {
     );
   }
 
-  /**
-   * Current Order status.
-   *
-   * Notice we expose a getter.
-   *
-   * Nobody can directly mutate status.
-   */
+  //  exposing a getter for status so nobody can directly mutate it.
   get status() {
     return this._status;
   }
 
-  /**
-   * Total price of every OrderItem.
-   *
-   * We calculate this instead of storing
-   * it inside the Entity.
-   *
-   * The database will still persist the
-   * value for reporting purposes.
-   */
+  //  We calculate Total price of every OrderItem instead of storing it inside the Entity.
   get totalAmount(): number {
-    return this.items.reduce(
-      (sum, item) => sum + item.subtotal,
-      0,
-    );
+    return this.items.reduce((sum, item) => sum + item.subtotal, 0);
   }
 
-  /**
-   * Aggregates the Order.
-   */
+  // Aggregates the Order.
   aggregate() {
     if (this._status !== OrderStatus.PENDING) {
-      throw new Error(
-        'Only pending Orders can be aggregated.',
-      );
+      throw new Error('Only pending Orders can be aggregated.');
     }
 
     this._status = OrderStatus.AGGREGATED;
@@ -141,14 +89,10 @@ export class OrderEntity {
     this._aggregatedAt = new Date();
   }
 
-  /**
-   * Dispatches the Order.
-   */
+  // Dispatches the Order.
   dispatch() {
     if (this._status !== OrderStatus.AGGREGATED) {
-      throw new Error(
-        'Only aggregated Orders can be dispatched.',
-      );
+      throw new Error('Only aggregated Orders can be dispatched.');
     }
 
     this._status = OrderStatus.DISPATCHED;
@@ -156,27 +100,19 @@ export class OrderEntity {
     this._dispatchedAt = new Date();
   }
 
-  /**
-   * Rider has picked up the Order.
-   */
+  // Rider has picked up the Order.
   startDelivery() {
     if (this._status !== OrderStatus.DISPATCHED) {
-      throw new Error(
-        'Order has not been dispatched.',
-      );
+      throw new Error('Order has not been dispatched.');
     }
 
     this._status = OrderStatus.IN_TRANSIT;
   }
 
-  /**
-   * Delivery completed.
-   */
+  // Delivery completed.
   complete() {
     if (this._status !== OrderStatus.IN_TRANSIT) {
-      throw new Error(
-        'Order must be in transit.',
-      );
+      throw new Error('Order must be in transit.');
     }
 
     this._status = OrderStatus.DELIVERED;
@@ -184,9 +120,7 @@ export class OrderEntity {
     this._completedAt = new Date();
   }
 
-  /**
-   * Cancels the Order.
-   */
+  // Cancels the Order.
   cancel() {
     if (
       ![
@@ -195,9 +129,7 @@ export class OrderEntity {
         OrderStatus.DISPATCHED,
       ].includes(this._status)
     ) {
-      throw new Error(
-        'This Order can no longer be cancelled.',
-      );
+      throw new Error('This Order can no longer be cancelled.');
     }
 
     this._status = OrderStatus.CANCELLED;
@@ -205,16 +137,12 @@ export class OrderEntity {
     this._cancelledAt = new Date();
   }
 
-  /**
-   * Marks delivery as failed.
-   */
+  // Marks delivery as failed.
   fail() {
     this._status = OrderStatus.FAILED;
   }
 
-  /**
-   * Exposes timestamps for persistence.
-   */
+  // Exposes timestamps for persistence.
   get aggregatedAt() {
     return this._aggregatedAt;
   }
@@ -233,4 +161,3 @@ export class OrderEntity {
 }
 
 // Next in sequence: apps/api/src/modules/orders/infrastructure/persistence/prisma-order.repository.ts
-

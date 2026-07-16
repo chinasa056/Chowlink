@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { Order, OrderItem, Prisma } from '@prisma/client';
+import { DeliveryStatus, Order, OrderItem, OrderStatus, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../../common/database/prisma/prisma.service';
 
@@ -8,45 +8,11 @@ import { OrderRepository } from '../../domain/interfaces/order.repository';
 import { OrderEntity } from '../../domain/entities/order.entities';
 import { OrderItemEntity } from '../../domain/entities/order-item.entity';
 
-/**
- * PrismaOrderRepository
- *
- * This class is the Infrastructure implementation
- * of the OrderRepository interface.
- *
- * Think of the interface as the "what"
- * and this class as the "how".
- *
- * The business layer says:
- *
- * "I need someone capable of saving Orders."
- *
- * Prisma answers:
- *
- * "I'll do it using MySQL."
- *
- * Tomorrow this class could be replaced
- * by a Mongo repository without changing
- * a single line inside the Use Cases.
- */
 @Injectable()
 export class PrismaOrderRepository implements OrderRepository {
-  constructor(
-    /**
-     * PrismaService is our gateway
-     * into the database.
-     *
-     * This repository is one of the
-     * few places in the application
-     * allowed to know Prisma exists.
-     */
-    private readonly prisma: PrismaService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Converts a Domain Entity into
-   * Prisma data.
-   */
+  //  Converts a Domain Entity into Prisma data.
   private toPersistence(order: OrderEntity) {
     return {
       userId: order.userId,
@@ -69,10 +35,7 @@ export class PrismaOrderRepository implements OrderRepository {
     };
   }
 
-  /**
-   * Converts a Prisma model back into
-   * our Domain Entity.
-   */
+  // Converts a Prisma model back into our Domain Entity.
   private toDomain(
     order: Order & {
       orderItems: OrderItem[];
@@ -99,25 +62,15 @@ export class PrismaOrderRepository implements OrderRepository {
 
       items: order.orderItems.map(
         (item) =>
-          new OrderItemEntity(item.menuItemId, item.quantity, item.price),
+          new OrderItemEntity(
+            item.menuItemId,
+            item.quantity,
+            item.price.toNumber(),
+          ),
       ),
     });
   }
-  /**
-   * Creates a brand new Order.
-   *
-   * Notice that this method simply
-   * persists data.
-   *
-   * It DOES NOT:
-   *
-   * - validate wallets
-   * - aggregate orders
-   * - call Chowdeck
-   * - publish queues
-   *
-   * Those belong elsewhere.
-   */
+
   async create(order: OrderEntity): Promise<OrderEntity> {
     const created = await this.prisma.order.create({
       data: this.toPersistence(order),
@@ -129,16 +82,17 @@ export class PrismaOrderRepository implements OrderRepository {
     return this.toDomain(created);
   }
 
-  /**
-   * Retrieves an Order using
-   * its unique identifier.
-   */
   async findById(id: string): Promise<OrderEntity | null> {
     const order = await this.prisma.order.findUnique({
       where: { id },
 
       include: {
         orderItems: true,
+        delivery: true,
+
+        organization: true,
+
+        user: true,
       },
     });
 
@@ -149,14 +103,7 @@ export class PrismaOrderRepository implements OrderRepository {
     return this.toDomain(order);
   }
 
-  /**
-   * Updates an existing Order.
-   *
-   * The repository doesn't care WHY
-   * the order is changing.
-   *
-   * It simply persists the changes.
-   */
+  // updates an existing order
   async save(order: OrderEntity): Promise<OrderEntity> {
     const updated = await this.prisma.order.update({
       where: {
@@ -173,22 +120,16 @@ export class PrismaOrderRepository implements OrderRepository {
     return this.toDomain(updated);
   }
 
-  /**
-   * Returns every Order waiting
-   * for aggregation.
-   *
-   * The Aggregation BullMQ Worker
-   * will use this method every day
-   * at 11:30 AM.
-   */
+  // Returns every Order waiting
+  // needed by the Aggregation worker
   async findPendingOrders(): Promise<OrderEntity[]> {
     const orders = await this.prisma.order.findMany({
       where: {
-        status: 'PENDING',
+        status: OrderStatus.PENDING,
       },
 
       include: {
-        //   orderItems: true,
+          // orderItems: true,
         orderItems: {
           include: {
             menuItem: true,
@@ -200,19 +141,12 @@ export class PrismaOrderRepository implements OrderRepository {
     return orders.map(this.toDomain.bind(this));
   }
 
-  /**
-   * Returns Orders already grouped
-   * and waiting to be dispatched
-   * through Chowdeck Relay.
-   *
-   * The Dispatch Worker will call
-   * this method after aggregation
-   * completes.
-   */
+  // Returns Orders already grouped and waiting to be dispatched
+  // needed by the Dispatch worker
   async findAggregatedOrders(): Promise<OrderEntity[]> {
     const orders = await this.prisma.order.findMany({
       where: {
-        status: 'AGGREGATED',
+        status: OrderStatus.AGGREGATED,
       },
 
       include: {
@@ -223,54 +157,28 @@ export class PrismaOrderRepository implements OrderRepository {
     return orders.map(this.toDomain.bind(this));
   }
 
-  /**
-   * Creates every OrderItem belonging
-   * to an Order.
-   *
-   * Why a separate method?
-   *
-   * Because during PlaceOrder we
-   * create:
-   *
-   * Order
-   *
-   * ↓
-   *
-   * Order Items
-   *
-   * inside one transaction.
-   */
+  // Creates every OrderItem belonging to an Order.
   async createOrderItems(items: Prisma.OrderItemCreateManyInput[]) {
     return this.prisma.orderItem.createMany({
       data: items,
     });
   }
 
-  /**
-   * Creates an Outbox Event.
-   *
-   * Notice something interesting.
-   *
-   * The Outbox table lives outside
-   * the Orders module conceptually,
-   * but creating the event happens
-   * inside the same database transaction
-   * as Order creation.
-   *
-   * That guarantees consistency.
-   */
+    // Creates an Outbox Event.
   async createOutboxEvent(data: Prisma.OutboxEventCreateInput) {
     return this.prisma.outboxEvent.create({
       data,
     });
   }
 
+  // Creates an Order Batch.
   async createBatch(data: { restaurantId: string; dispatchDate: Date }) {
     return this.prisma.orderBatch.create({
       data,
     });
   }
 
+  // Assigns an Order to a Batch.
   async assignOrderToBatch(orderId: string, batchId: string) {
     await this.prisma.order.update({
       where: {
@@ -282,34 +190,24 @@ export class PrismaOrderRepository implements OrderRepository {
     });
   }
 
-  async aggregateOrder(
-    order: OrderEntity,
-    batchId: string,
-    tx: Prisma.TransactionClient,
-): Promise<void> {
+  // Aggregates an Order.
+  async aggregateOrder(order: OrderEntity, batchId: string): Promise<void> {
+    await this.prisma.order.update({
+      where: {
+        id: order.id!,
+      },
 
-    await tx.order.update({
+      data: {
+        status: order.status,
 
-        where: {
+        aggregatedAt: order.aggregatedAt,
 
-            id: order.id!,
-
-        },
-
-        data: {
-
-            status: order.status,
-
-            aggregatedAt: order.aggregatedAt,
-
-            orderBatchId: batchId,
-
-        },
-
+        orderBatchId: batchId,
+      },
     });
+  }
 
-}
-
+  // Checks if an Order has a Delivery.
   async hasDeliveryForOrder(orderId: string): Promise<boolean> {
     const delivery = await this.prisma.delivery.findUnique({
       where: { orderId },
@@ -318,6 +216,7 @@ export class PrismaOrderRepository implements OrderRepository {
     return !!delivery;
   }
 
+  // Saves the dispatch transaction.
   async saveDispatchTransaction(
     order: OrderEntity,
     deliveryData: {
@@ -326,14 +225,14 @@ export class PrismaOrderRepository implements OrderRepository {
       trackingUrl?: string;
       deliveryFee?: number;
       provider: 'CHOWDECK';
-      status: 'PENDING' | 'DISPATCHED' | 'IN_TRANSIT' | 'DELIVERED' | 'FAILED' | 'CANCELLED';
+      status: DeliveryStatus
     },
     outboxEventData: {
       aggregateId: string;
       aggregateType: string;
       eventType: string;
       payload: any;
-    }
+    },
   ): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
       // Create Delivery
@@ -374,7 +273,7 @@ export class PrismaOrderRepository implements OrderRepository {
       aggregateType: string;
       eventType: string;
       payload: any;
-    }
+    },
   ): Promise<void> {
     /**
      * STEP 1 — Begin database transaction.
@@ -387,7 +286,7 @@ export class PrismaOrderRepository implements OrderRepository {
       await tx.delivery.update({
         where: { orderId: order.id! },
         data: {
-          status: 'CANCELLED',
+          status: DeliveryStatus.CANCELLED,
           cancelledAt: new Date(),
           cancelReason: cancelReason,
         },
@@ -417,4 +316,3 @@ export class PrismaOrderRepository implements OrderRepository {
 }
 
 // Next in sequence: apps/api/src/common/queues/outbox.processor.ts
-

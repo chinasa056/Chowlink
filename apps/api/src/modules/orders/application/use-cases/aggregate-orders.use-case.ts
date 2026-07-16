@@ -165,7 +165,7 @@ export class AggregateOrdersUseCase {
           /**
            * Persist the updated status.
            */
-          await this.repository.aggregateOrder(order, batch.id, tx);
+          await this.repository.aggregateOrder(order, batch.id);
 
           /**
            * Remember this Order.
