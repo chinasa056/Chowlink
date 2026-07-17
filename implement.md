@@ -167,10 +167,12 @@ We have successfully implemented the `CancelOrderUseCase` flow to allow cancelli
 
 ### 4. Events & Outbox Routing
 - **File**: [order.event.ts](file:///c:/Users/User/Desktop/Chowlink/apps/api/src/common/events/order/order.event.ts)
+
   - Added `OrderCancelledEvent`.
 - **File**: [domain-event.publisher.ts](file:///c:/Users/User/Desktop/Chowlink/apps/api/src/common/events/domain-event.publisher.ts)
   - Converted the `DomainEventPublisher` from `interface` to `abstract class` so it is resolvable as a DI token.
 - **File**: [events.module.ts](file:///c:/Users/User/Desktop/Chowlink/apps/api/src/common/events/events.module.ts)
+
   - Activated and exported `EventsModule` as `@Global()`, binding `DomainEventPublisher` to `OutboxEventPublisher`.
 - **File**: [app.module.ts](file:///c:/Users/User/Desktop/Chowlink/apps/api/src/app.module.ts)
   - Imported `EventsModule`.

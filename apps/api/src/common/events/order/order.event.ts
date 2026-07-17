@@ -1,17 +1,14 @@
 import { OrderEntity } from '../../../modules/orders/domain/entities/order.entities';
 import { DomainEvent } from '../domain-event';
+import { OrderEventType } from '../events.constants';
 
-
-/**
- * Published whenever a brand new order
- * has been created.
- */
+// Published whenever a brand new order has been created.
 export class OrderCreatedEvent implements DomainEvent {
   aggregateId: string;
 
   aggregateType = 'ORDER';
 
-  eventType = 'ORDER_CREATED';
+  eventType = OrderEventType.ORDER_CREATED;
 
   occurredAt = new Date();
 
@@ -31,16 +28,13 @@ export class OrderCreatedEvent implements DomainEvent {
   }
 }
 
-/**
- * Published after pending orders have
- * been grouped into a delivery batch.
- */
+// Published after pending orders have been grouped into a delivery batch.
 export class OrdersAggregatedEvent implements DomainEvent {
   aggregateId: string;
 
   aggregateType = 'ORDER_BATCH';
 
-  eventType = 'ORDERS_AGGREGATED';
+  eventType = OrderEventType.ORDER_AGGREGATED;
 
   occurredAt = new Date();
 
@@ -65,10 +59,7 @@ export class OrdersAggregatedEvent implements DomainEvent {
   }
 }
 
-/**
- * Published after a delivery has been
- * created with Chowdeck Relay.
- */
+// Published after a delivery has been created with Chowdeck Relay.
 export class OrderDispatchedEvent
   implements DomainEvent
 {
@@ -76,7 +67,7 @@ export class OrderDispatchedEvent
 
   aggregateType = 'ORDER';
 
-  eventType = 'ORDER_DISPATCHED';
+  eventType = OrderEventType.ORDER_DISPATCHED;
 
   occurredAt = new Date();
 
@@ -101,10 +92,7 @@ export class OrderDispatchedEvent
   }
 }
 
-/**
- * Published after Chowdeck notifies
- * us that delivery completed.
- */
+//  * Published after Chowdeck notifies us that delivery completed.
 export class OrderCompletedEvent
   implements DomainEvent
 {
@@ -112,7 +100,7 @@ export class OrderCompletedEvent
 
   aggregateType = 'ORDER';
 
-  eventType = 'ORDER_COMPLETED';
+  eventType = OrderEventType.ORDER_COMPLETED;
 
   occurredAt = new Date();
 
@@ -136,10 +124,7 @@ export class OrderCompletedEvent
   }
 }
 
-/**
- * Published after an order has been successfully cancelled
- * both in Chowdeck and in our local database.
- */
+// Published after an order has been successfully cancelled both in Chowdeck and in our local database.
 export class OrderCancelledEvent
   implements DomainEvent
 {
@@ -147,7 +132,7 @@ export class OrderCancelledEvent
 
   aggregateType = 'ORDER';
 
-  eventType = 'ORDER_CANCELLED';
+  eventType = OrderEventType.ORDER_CANCELLED;
 
   occurredAt = new Date();
 
@@ -167,4 +152,4 @@ export class OrderCancelledEvent
       cancelledAt: this.occurredAt,
     };
   }
-}
+}

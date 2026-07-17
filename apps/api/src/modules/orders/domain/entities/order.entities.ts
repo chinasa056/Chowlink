@@ -159,5 +159,3 @@ export class OrderEntity {
     return this._cancelledAt;
   }
 }
-
-// Next in sequence: apps/api/src/modules/orders/infrastructure/persistence/prisma-order.repository.ts

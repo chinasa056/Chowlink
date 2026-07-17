@@ -545,3 +545,63 @@ This is the sequence I'd use:
 ---
 
 At this point, before writing code, the next thing I would do is create the **PRD (Product Requirements Document)** and define the **business rules**, because those decisions determine the Prisma schema, module boundaries, DTOs, state machines, and queue flows. That's the foundation everything else will sit on.
+Yes. Since you're learning the architecture, I'll keep the code **very explicit and heavily commented** instead of trying to be clever.
+
+I am intentionally **not** using `reduce()`, functional programming tricks, helper methods, or `rehydrate()` yet. We'll keep everything readable. Once you fully understand the flow, we can refactor later.
+
+One thing though: **I would still recommend adding a simple constructor to `OrderEntity` that accepts all its properties**, because we need a proper domain object to call `aggregate()`. Without either a constructor or `rehydrate()`, the use case cannot instantiate the domain entity correctly.
+
+---
+
+# AggregateOrdersUseCase Lifecycle
+
+```text
+BullMQ Scheduler (11:30 AM)
+            │
+            ▼
+AggregateOrdersUseCase.execute()
+            │
+            ▼
+Load all PENDING Orders
+            │
+            ▼
+Group Orders by Restaurant
+            │
+            ▼
+For each Restaurant
+            │
+            ▼
+Start Database Transaction
+            │
+            ▼
+Create OrderBatch
+            │
+            ▼
+Loop through Orders
+            │
+            ▼
+Create OrderEntity
+            │
+            ▼
+order.aggregate()
+            │
+            ▼
+Update Order Status
+            │
+            ▼
+Assign Order to Batch
+            │
+            ▼
+Collect Order IDs
+            │
+            ▼
+Publish OrdersAggregatedEvent
+            │
+            ▼
+Commit Transaction
+            │
+            ▼
+Next Restaurant
+```
+
+---
