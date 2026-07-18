@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import { InjectQueue } from '@nestjs/bullmq';
 
@@ -12,33 +9,16 @@ import {
   ORDER_AGGREGATION_JOB,
 } from '../../../../common/queues/bullmq.cnstants';
 
-/**
- * AggregationScheduler
- *
- * Its only responsibility is to tell BullMQ
- * WHEN order aggregation should happen.
- *
- * It never aggregates Orders.
- *
- * It never talks to Prisma.
- *
- * It never knows business rules.
- */
 @Injectable()
-export class AggregationScheduler
-  implements OnModuleInit
-{
+export class AggregationScheduler implements OnModuleInit {
   constructor(
     @InjectQueue(ORDER_QUEUE)
     private readonly queue: Queue,
   ) {}
 
   async onModuleInit() {
-    /**
-     * Every weekday
-     *
-     * 11:30 AM
-     */
+    
+    // Every weekday 11:30 AM
     await this.queue.upsertJobScheduler(
       'daily-order-aggregation',
       {

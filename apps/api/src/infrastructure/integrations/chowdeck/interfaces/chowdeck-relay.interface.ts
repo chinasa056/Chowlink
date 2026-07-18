@@ -1,4 +1,4 @@
-import { CreateDeliveryInput } from '../dto/create-delivery.dto';
+import { CreateDeliveryInput } from '../dto/delivery.dto';
 import { DeliveryResult, RedeliveryResult } from '../types/chowdeck.types';
 
 export interface IRelayClient {

@@ -7,6 +7,7 @@ import { PrismaService } from '../../../../common/database/prisma/prisma.service
 import { OrderRepository } from '../../domain/interfaces/order.repository';
 import { OrderEntity } from '../../domain/entities/order.entities';
 import { OrderItemEntity } from '../../domain/entities/order-item.entity';
+import { OrderDispatchDetails } from '../../domain/interfaces/order-dispatch-details';
 
 @Injectable()
 export class PrismaOrderRepository implements OrderRepository {
@@ -260,6 +261,86 @@ export class PrismaOrderRepository implements OrderRepository {
       });
     });
   }
+
+  async findDispatchDetails(
+  orderId: string,
+): Promise<OrderDispatchDetails | null> {
+
+  const order = await this.prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      organization: true,
+      orderItems: {
+        include: {
+          menuItem: {
+            include: {
+              restaurant: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    return null;
+  }
+
+  const organizationAddress =
+    await this.prisma.address.findFirst({
+      where: {
+        organizationId: order.organizationId,
+      },
+    });
+
+  const restaurantId =
+    order.orderItems[0]?.menuItem?.restaurantId;
+
+  const restaurantAddress =
+    await this.prisma.address.findFirst({
+      where: {
+        restaurantId,
+      },
+    });
+
+  const restaurant =
+    order.orderItems[0]?.menuItem?.restaurant;
+
+  return {
+    orderId: order.id,
+
+    orderBatchId: order.orderBatchId,
+
+    organization: {
+      name: order.organization.name,
+      phone: order.organization.phone,
+    },
+
+    restaurant: {
+      id: restaurant?.id ?? '',
+      name: restaurant?.name ?? '',
+      phone: restaurant?.phone ?? '',
+    },
+
+    restaurantAddress: restaurantAddress
+      ? {
+          latitude: restaurantAddress.latitude,
+          longitude: restaurantAddress.longitude,
+        }
+      : null,
+
+    organizationAddress: organizationAddress
+      ? {
+          latitude: organizationAddress.latitude,
+          longitude: organizationAddress.longitude,
+        }
+      : null,
+
+    totalAmount: Number(order.totalAmount),
+
+    notes: order.notes ?? undefined,
+  };
+}
 
   /**
    * Performs an atomic database transaction to update Order and Delivery to CANCELLED,

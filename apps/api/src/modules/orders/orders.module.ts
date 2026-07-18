@@ -29,23 +29,16 @@ import { PrismaCatalogueRepository } from '../catalogue/repositories/prisma.cata
   controllers: [OrdersController],
 
   providers: [
-    /**
-     * Use Cases
-     */
+    //Use Cases and services
     AggregateOrdersUseCase,
-
     DispatchOrderUseCase,
-
     CancelOrderUseCase,
-
     PlaceOrderUseCase,
     CatalogueService,
     WalletService,
     WalletRepository,
 
-    /**
-     * Repositories
-     */
+    // Repositories
     {
       provide: OrderRepository,
       useClass: PrismaOrderRepository,
@@ -54,24 +47,12 @@ import { PrismaCatalogueRepository } from '../catalogue/repositories/prisma.cata
       provide: CatalogueRepository,
       useClass: PrismaCatalogueRepository,
     },
-    /**
-     * Queue Scheduler (registers repeatable jobs)
-     */
+
+    // Queues
     AggregationScheduler,
-
-    /**
-     * Queue Processors (execute use cases when jobs fire)
-     */
     AggregationProcessor,
-
     DispatchProcessor,
 
-    /**
-     * Chowdeck Relay SDK client.
-     *
-     * Injected into DispatchOrderUseCase.
-     * The API key is read from environment variables.
-     */
     {
       provide: ChowdeckRelayClient,
       useFactory: () => {

@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { IRelayClient } from './interfaces/chowdeck-relay.interface';
-import { CreateDeliveryInput } from './dto/create-delivery.dto';
+import { CreateDeliveryInput } from './dto/delivery.dto';
 import { DeliveryResult, RedeliveryResult } from './types/chowdeck.types';
 import { ChowdeckError } from './errors/chowdeck.error';
 
@@ -22,7 +22,8 @@ export class ChowdeckRelayClient implements IRelayClient {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<any>;
       const statusCode = axiosError.response?.status;
-      const providerMessage = axiosError.response?.data?.message || axiosError.message;
+      const providerMessage =
+        axiosError.response?.data?.message || axiosError.message;
       throw new ChowdeckError(defaultMessage, statusCode, providerMessage);
     }
     throw new ChowdeckError(defaultMessage);
@@ -30,6 +31,7 @@ export class ChowdeckRelayClient implements IRelayClient {
 
   async createDelivery(input: CreateDeliveryInput): Promise<DeliveryResult> {
     try {
+
       //Get delivery fee
       const feeResponse = await this.http.post('/relay/delivery/fee', {
         source_address: {
@@ -64,7 +66,6 @@ export class ChowdeckRelayClient implements IRelayClient {
         fee_id: feeId,
         item_type: 'food',
         user_action: 'sending',
-        reference: input.reference,
         estimated_order_amount: input.estimatedOrderAmount,
         customer_delivery_note: input.note,
       });
@@ -87,7 +88,7 @@ export class ChowdeckRelayClient implements IRelayClient {
     try {
       const response = await this.http.get(`/relay/delivery/${reference}`);
       const data = response.data.data;
-      
+
       return {
         id: data.id,
         reference: data.reference,
@@ -96,7 +97,10 @@ export class ChowdeckRelayClient implements IRelayClient {
         status: data.status,
       };
     } catch (error) {
-      this.handleError(error, `Failed to fetch delivery status for ${reference}`);
+      this.handleError(
+        error,
+        `Failed to fetch delivery status for ${reference}`,
+      );
     }
   }
 

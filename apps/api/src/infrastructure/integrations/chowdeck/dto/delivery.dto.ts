@@ -10,7 +10,11 @@ export interface ContactDetails {
 export interface CreateDeliveryInput {
   pickup: ContactDetails;
   destination: ContactDetails;
-  reference?: string;
   estimatedOrderAmount: number;
   note?: string;
+}
+
+export interface CancelDeliveryInput {
+  reference: string;
+  reason: string;
 }

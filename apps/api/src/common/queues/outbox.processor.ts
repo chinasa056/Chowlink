@@ -10,32 +10,12 @@ import {
   ORDER_DISPATCH_JOB,
   OUTBOX_POLL_JOB,
 } from './bullmq.cnstants';
+import { OutboxStatus } from '@prisma/client';
+import { OrderEventType } from '../events/events.constants';
 
-/**
- * OutboxProcessor
- *
- * This is the event router of the system.
- *
- * Its only responsibility:
- *
- * Read PENDING events from the Outbox table
- * and translate them into BullMQ jobs.
- *
- * It does NOT:
- *
- * - Aggregate orders
- * - Dispatch deliveries
- * - Send notifications
- * - Call Chowdeck
- *
- * It simply asks:
- *
- * "Because this event happened... what jobs should exist?"
- *
- * This design means adding a new downstream action
- * (e.g. Slack notification) requires only adding a
- * new case here — without touching any Use Case.
- */
+//  This is the event router of the system. reads PENDING events from the Outbox table
+//  and translate them into BullMQ jobs.
+
 @Processor(OUTBOX_QUEUE)
 export class OutboxProcessor extends WorkerHost {
   private readonly logger = new Logger(OutboxProcessor.name);
@@ -43,10 +23,7 @@ export class OutboxProcessor extends WorkerHost {
   constructor(
     private readonly prisma: PrismaService,
 
-    /**
-     * Inject the Orders queue so we can
-     * create dispatch jobs.
-     */
+    // Inject the Orders queue so we can create dispatch jobs.
     @InjectQueue(ORDER_QUEUE)
     private readonly orderQueue: Queue,
   ) {
@@ -62,13 +39,12 @@ export class OutboxProcessor extends WorkerHost {
   }
 
   private async processOutboxEvents(): Promise<void> {
-    /**
-     * Fetch a batch of PENDING outbox events.
-     * Process in small chunks to avoid overwhelming
-     * the system on startup.
-     */
+    //  Fetch a batch of PENDING outbox events.
+    // Process in small chunks to avoid overwhelming
+    // the system on startup.
+
     const events = await this.prisma.outboxEvent.findMany({
-      where: { status: 'PENDING' },
+      where: { status: OutboxStatus.PENDING },
       orderBy: { createdAt: 'asc' },
       take: 100,
     });
@@ -79,31 +55,21 @@ export class OutboxProcessor extends WorkerHost {
 
     for (const event of events) {
       try {
-        /**
-         * Mark as PROCESSING to prevent
-         * other workers picking it up concurrently.
-         */
+        //  Mark as PROCESSING to prevent other workers picking it up concurrently.
+
         await this.prisma.outboxEvent.update({
           where: { id: event.id },
-          data: { status: 'PROCESSING' },
+          data: { status: OutboxStatus.PROCESSING },
         });
 
-        /**
-         * Route the event to the appropriate job(s).
-         *
-         * This switch statement is the heart of the router.
-         *
-         * Each event type maps to one or more BullMQ jobs.
-         */
+        //  Route the event to the appropriate job(s).
         await this.routeEvent(event);
 
-        /**
-         * Mark as SENT after successful routing.
-         */
+        //  Mark as SENT after successful routing.
         await this.prisma.outboxEvent.update({
           where: { id: event.id },
           data: {
-            status: 'SENT',
+            status: OutboxStatus.SENT,
             processedAt: new Date(),
           },
         });
@@ -120,7 +86,7 @@ export class OutboxProcessor extends WorkerHost {
          */
         await this.prisma.outboxEvent.update({
           where: { id: event.id },
-          data: { status: 'FAILED' },
+          data: { status: OutboxStatus.FAILED },
         });
       }
     }
@@ -132,13 +98,8 @@ export class OutboxProcessor extends WorkerHost {
     payload: any;
   }): Promise<void> {
     switch (event.eventType) {
-      /**
-       * OrderCreatedEvent
-       *
-       * Currently no immediate downstream job needed.
-       * Could later trigger a confirmation email job.
-       */
-      case 'ORDER_CREATED':
+      // OrderCreatedEvent
+      case OrderEventType.ORDER_CREATED:
         this.logger.log(
           `[Outbox] ORDER_CREATED for order ${event.payload?.orderId} — no downstream jobs configured yet`,
         );
@@ -156,7 +117,7 @@ export class OutboxProcessor extends WorkerHost {
        * Dispatching individually allows partial failure
        * handling — if one delivery fails, the others proceed.
        */
-      case 'ORDERS_AGGREGATED': {
+      case OrderEventType.ORDER_AGGREGATED: {
         const orderIds: string[] = event.payload?.orderIds ?? [];
 
         this.logger.log(
@@ -181,37 +142,26 @@ export class OutboxProcessor extends WorkerHost {
         break;
       }
 
-      /**
-       * OrderDispatchedEvent
-       *
-       * A delivery has been created in Chowdeck.
-       * Future jobs: Notification, Analytics, Wallet debit.
-       */
-      case 'ORDER_DISPATCHED':
+      // OrderDispatchedEvent
+      // A delivery has been created in Chowdeck. Future jobs: Notification, Analytics, Wallet debit.
+      case OrderEventType.ORDER_DISPATCHED:
         this.logger.log(
           `[Outbox] ORDER_DISPATCHED for order ${event.payload?.orderId} — notification jobs not yet implemented`,
         );
         break;
 
-      /**
-       * OrderCompletedEvent
-       *
-       * Chowdeck confirmed delivery.
-       * Future jobs: Receipt generation, Wallet final settlement.
-       */
-      case 'ORDER_COMPLETED':
+      // OrderCompletedEvent
+      // Chowdeck confirmed delivery. Future jobs: Receipt generation, Wallet final settlement.
+      case OrderEventType.ORDER_COMPLETED:
         this.logger.log(
           `[Outbox] ORDER_COMPLETED for order ${event.payload?.orderId} — receipt jobs not yet implemented`,
         );
         break;
 
-      /**
-       * OrderCancelledEvent
-       *
-       * The order cancellation has been successfully persisted.
-       * Future jobs: Refund wallet, send cancellation email, notify admins.
-       */
-      case 'ORDER_CANCELLED':
+      // OrderCancelledEvent
+      // The order cancellation has been successfully persisted.
+      // Future jobs: Refund wallet, send cancellation email, notify admins.
+      case OrderEventType.ORDER_CANCELLED:
         this.logger.log(
           `[Outbox] ORDER_CANCELLED for order ${event.payload?.orderId} — notification and refund jobs not yet implemented`,
         );
@@ -224,6 +174,4 @@ export class OutboxProcessor extends WorkerHost {
     }
   }
 }
-
-// End of order cancellation sequence.
 

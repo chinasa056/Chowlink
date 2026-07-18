@@ -1,4 +1,5 @@
 import { OrderEntity } from '../entities/order.entities';
+import { OrderDispatchDetails } from './order-dispatch-details';
 
 export abstract class OrderRepository {
   abstract create(order: OrderEntity): Promise<OrderEntity>;
@@ -11,17 +12,13 @@ export abstract class OrderRepository {
 
   abstract findAggregatedOrders(): Promise<OrderEntity[]>;
 
-  /**
-   * Creates a new Order Batch.
-   */
+  //Creates a new Order Batch.
   abstract createBatch(data: {
     restaurantId: string;
     dispatchDate: Date;
   }): Promise<{ id: string }>;
 
-  /**
-   * Assigns an Order to a Batch.
-   */
+  //Assigns an Order to a Batch.
   abstract assignOrderToBatch(orderId: string, batchId: string): Promise<void>;
 
   abstract aggregateOrder(
@@ -30,6 +27,10 @@ export abstract class OrderRepository {
   ): Promise<void>;
 
   abstract hasDeliveryForOrder(orderId: string): Promise<boolean>;
+
+    abstract findDispatchDetails(
+    orderId: string,
+  ): Promise<OrderDispatchDetails | null>;
 
   abstract saveDispatchTransaction(
     order: OrderEntity,
@@ -76,52 +77,3 @@ export abstract class OrderRepository {
     },
   ): Promise<void>;
 }
-
-// Next in sequence: apps/api/src/modules/orders/infrastructure/persistence/prisma-order.repository.ts
-
-// /**
-//  * This interface represents everything
-//  * the business layer expects from any
-//  * Order repository.
-//  *
-//  * Notice that nothing here mentions:
-//  *
-//  * - Prisma
-//  * - MySQL
-//  * - MongoDB
-//  *
-//  * Tomorrow we could swap Prisma for
-//  * another ORM without touching any
-//  * use case.
-//  */
-// export interface OrderRepository {
-//   /**
-//    * Persist a newly created order.
-//    */
-//   create(data: Partial<Order>): Promise<Order>;
-
-//   /**
-//    * Find an order using its primary id.
-//    */
-//   findById(id: string): Promise<Order | null>;
-
-//   /**
-//    * Persist changes made to an order.
-//    */
-//   update(
-//     id: string,
-//     data: Partial<Order>,
-//   ): Promise<Order>;
-
-//   /**
-//    * Find all orders currently waiting
-//    * for aggregation.
-//    */
-//   findPendingOrders(): Promise<Order[]>;
-
-//   /**
-//    * Find all aggregated orders waiting
-//    * to be dispatched.
-//    */
-//   findAggregatedOrders(): Promise<Order[]>;
-// }

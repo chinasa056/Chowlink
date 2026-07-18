@@ -56,7 +56,7 @@ model Organization {
   industry           String?
   orderingCutoffTime String
   isActive           Boolean @default(true)
-
+phone              String
   users       User[]
   departments Department[]
   orders      Order[]
@@ -150,6 +150,7 @@ model Restaurant {
   id String @id @default(uuid())
 
   name        String
+  phone       String
   description String?
 
   isActive Boolean @default(true)
