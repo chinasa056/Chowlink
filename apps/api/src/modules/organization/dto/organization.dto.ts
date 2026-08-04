@@ -9,6 +9,9 @@ export class CreateOrganizationDto {
 
   @IsString()
   industry: string;
+
+  @IsString()
+  phone: string;
 }
 
 export class CreateDepartmentDto {

@@ -84,20 +84,7 @@ export class DispatchOrderUseCase {
     // Transition Domain State
     order.dispatch();
 
-    /**
-     * STEP 7, 8, 9 — Atomic Transaction
-
-     *
-     * 1. Create Delivery record
-     * 2. Update Order status to DISPATCHED
-     * 3. Insert OrderDispatchedEvent into Outbox
-     *
-     * If any step fails, they all roll back.
-     * Chowdeck already has the delivery — but
-     * our idempotency check (step 3) will catch
-     * retries before reaching Chowdeck again.
-     */
-
+    //Atomic Transaction t create delivery record, update oroder status and save OrderDispatchedEvent into outbox
     await this.prisma.$transaction(async (tx) => {
       const event = new OrderDispatchedEvent(
         orderId,

@@ -11,6 +11,7 @@ export class PrismaCatalogueRepository implements CatalogueRepository {
   async createRestaurant(data: {
     name: string;
     description?: string;
+    phone: string;
   }): Promise<Restaurant> {
     return this.prisma.restaurant.create({
       data,

@@ -10,6 +10,7 @@ export class PrismaOrganizationRepository implements OrganizationRepository{
     name: string;
     industry: string;
     orderingCutoffTime: string;
+    phone: string;
   }) {
     return this.prisma.organization.create({
       data,

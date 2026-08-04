@@ -22,6 +22,7 @@ export class OrganizationService {
           name: dto.name,
           industry: dto.industry,
           orderingCutoffTime: dto.orderingCutoffTime,
+          phone: dto.phone,
         },
       });
 
